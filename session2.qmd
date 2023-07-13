@@ -1,0 +1,459 @@
+---
+title: "2. Working with Data"
+---
+
+::: callout-tip
+## Learning Objectives
+-  Loading, exploring and saving data
+-  Learn to manipulate data frames with tidyverse
+-  Overview of ggplot2 for data visualization
+:::
+
+-  For this session, we will be working with the co2_mm_gl_clean.csv dataset
+
+-  This data contains monthly globally averaged CO2 records between 1979 and 2022.
+
+-  Lan, X., Tans, P. and K.W. Thoning: Trends in globally-averaged CO2 determined from NOAA Global Monitoring Laboratory measurements. Version 2023-01 NOAA/GML (<https://gml.noaa.gov/ccgg/trends/>)
+
+## 2.1 Data import and export
+
+-  package `readr`	reads txt, csv, Rdata (or rda). 
+-  package `haven` reads SPSS, Stata, and SAS files.
+-  package `readxl` reads excel files (both .xls and .xlsx).
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+knitr::opts_chunk$set(echo = TRUE, fig.align="center")
+options(scipen = 999, pillar.print_max = Inf)
+co2 <- read_csv(file = "co2_mm_gl_clean.csv")
+```
+
+###  Looking at the data
+
+| co2             | Look at the whole data frame           |
+|-----------------|----------------------------------------|
+| head(co2)       | Look at the first few rows             |
+| tail(co2)       | Look at the last few rows              |
+| colnames(co2)   | Names of the columns in the data frame |
+| attributes(co2) | Attributes of the data frame           |
+| dim(co2)        | Dimensions of the data frame           |
+| ncol(co2)       | Number of columns                      |
+| nrow(co2)       | Number of rows                         |
+| summary(co2)    | Summary statistics                     |
+| str(co2)        | Structure of the data frame            |
+
+
+```{r warning=FALSE, message=FALSE}
+library(DT)
+datatable(co2)
+```
+
+
+```{r}
+str(co2)
+summary(co2) 
+```
+
+### Renaming variables
+```{r}
+colnames(co2)[5]
+colnames(co2)[5] <- "sd"
+colnames(co2)
+```
+
+### Creating new variables
+```{r}
+co2$lowerbound_1sd <- co2$average - 1*co2$sd
+co2$upperbound_1sd <- co2$average + 1*co2$sd
+head(co2)
+```
+### Subsetting data
+
+```{r}
+# extracting data between 2020 and 2022;
+co2_2020_2022 <- subset(co2, year >= 2020 & year <=2022)
+
+# subletting directly from dataframe using index;
+# try at home;
+# co2_2020_2022 <- CO2[CO2year >= 2020 & year <=2022, ]  # Select observations with year between 2020 and 2022;
+```
+
+
+-  we can export data from r using write function
+
+```{r eval=FALSE}
+write.csv(co2, file = 'co2_mm_gl_clean2.csv')
+```
+
+## 2.2 Data manipulation with tidyverse (a crush introduction)
+
+::: {.callout-note}
+**What is the Tidyverse?**
+
+The tidyverse consists of a few key packages:
+  -  **dplyr: data manipulation**
+  -  **ggplot2: data visualization**
+  -  **tibble: tibbles, a modern re-imagining of data frames**
+  -  tidyr: data tidying
+  -  readr: data import
+  -  purrr: functional programming, e.g. alternate approaches to apply
+
+:::
+
+-  Pipe operator `%>%`
+
+-  Pipes are operators that send what comes before the pipe to what comes after.
+
+-  frequently used in tidyverse!
+
+### Selecting Columns
+
+-  Example: using `%>%` to subset data
+    -  `select()` in `dplyr` subset columns by names
+    -  `filter()` subset rows using column values
+
+```{r eval=FALSE}
+# selecting columns;
+co2 %>%
+  select(year, month, average) %>%
+  head()
+
+# drop some variables;
+co2 %>%
+  select(-month) %>%
+  head()
+```
+
+Sometimes, we have a lot of variables to select, and if they have a common naming scheme, this can be very easy.
+
+```{r eval=FALSE}
+co2 %>%
+  select(contains("bound")) %>%
+  head()
+```
+
+-  Over helpful functions to be used within `select()`
+    -  starts_with: starts with a prefix
+    -  ends_with: ends with a suffix
+    -  contains: contains a literal string
+    -  matches: matches a regular expression
+    -  num_range: a numerical range like wk1, wk2, wk3.
+        -  `select(num_range("wk", 1:3))`
+    -  everything: all variables.
+
+### selecting rows
+
+```{r}
+# selecting observations in year 2022;
+co2 %>%
+  select(year, month, average) %>%
+  filter(year == 2022)
+```
+
+
+```{r eval=FALSE}
+# selecting observations between 2020 and 2022;
+co2 %>%
+  select(year, month, average) %>%
+  filter(year <= 2022 & year >= 2020)
+```
+
+
+
+### creating new variables
+
+-  Example: using `%>%` and `mutate()` to create new variable
+
+```{r eval=TRUE}
+co2 %>%
+  mutate(lowerbound_2sd = average - 2*sd,
+         upperbound_2sd = average + 2*sd) %>%
+  head()
+
+# creating new variables based on conditions of another variable;
+# suppose we want to create a year group variable;
+
+co2 %>% 
+  mutate(year_group = case_when(
+    year < 1980 ~ '1970-1979',
+    1980 <= year & year < 1990 ~ '1980-1989',
+    1990 <= year & year < 2000 ~ '1990-1999',
+    2000 <= year & year < 2010 ~ '2000-2009',
+    2010 <= year & year < 2020 ~ '2010-2019',
+    2020 <= year & year < 2030 ~ '2020-2029',
+  )) %>%
+  head()
+
+co2 <- co2 %>% #updating the data object
+  mutate(year_group = case_when(
+    year < 1980 ~ '1970-1979',
+    1980 <= year & year < 1990 ~ '1980-1989',
+    1990 <= year & year < 2000 ~ '1990-1999',
+    2000 <= year & year < 2010 ~ '2000-2009',
+    2010 <= year & year < 2020 ~ '2010-2019',
+    2020 <= year & year < 2030 ~ '2020-2029',
+  ))
+
+```
+
+### Grouping and Summarizing Data
+
+-  we can use `group_by()` and `summarize()` to help calculating group-based statistics
+
+-  Example: suppose we want to calculate average, min, and max co2 by years (aggregated over month)
+
+```{r}
+co2 %>%
+  select(year, average) %>%
+  group_by(year) %>%
+  summarise(
+    `mean co2 by month` = mean(average),
+    `min co2 by month` = min(average),
+    `max co2 by month` = max(average)
+  )
+```
+
+> we observe an increasing trend of global co2 concenration over years.
+
+### Renaming columns
+
+```{r eval=FALSE}
+#example syntax;
+data %>%
+  rename(new_name = oldname,
+         new_name2 = oldname2)
+```
+
+
+### Reshaping datasets - wide vs long data
+
+![R cheetsheet on reshaping data](pics/reshape.png)
+-  pivot function has three argumnets:
+
+The function requires the following arguments
+    -  a data frame (e.g. “wide”)
+    -  cols: name of the columns we wish to gather
+    -  names_to: name of the new column 
+    -  values_to: name of the new column containing variable values 
+
+
+-  suppose we want to reshape the long co2 data to wide data with month 1 to 12 as columns
+
+```{r message=FALSE, warning=FALSE}
+co2_wide <- co2 %>%
+  select(year, month, average) %>%
+  pivot_wider(names_from = month,
+              names_prefix = "mth",
+              values_from = average)
+
+head(co2_wide)
+```
+
+
+###  Merging data frames
+
+- we can also join two or multiple data frames together. 
+  -  left_join()
+      -  keeps all the entries that are present in the left (first) table and excludes any that are only in the right table
+  -  right_join()
+      -  keeps all the entries that are present in the right table and excludes any that are only in the left table.
+  -  inner_join()
+      -  keeps only the entries that are present in both tables. inner_join is the only function that guarantees you won’t generate any missing entries.
+  -  full_join()
+      -  keeps all of the entries in both tables, regardless of whether or not they appear in the other table.
+
+
+![R cheetsheet on merging data](pics/dplyr-joins.png)
+
+## 2.3 Data visualization with ggplot2
+
+![](pics/hex_ggplot.svg){width=20%}
+> Data visualization is key to data story telling.
+
+-  ggplot2 is a powerful package that enable publication ready plots
+    -  easy customization (over SAS)
+    -  clear syntax and lots of online template
+    -  lots of extensions on style
+
+![How ggplot2 works, <https://codeahoy.com/learn/rtutorial/ch8/>](pics/DL_datavis1_layers.png)
+
+::: {.callout-tip}
+## ggplot components (from Wickham, 2009)
+
+-  **layer** is a collection of geometric elements and statistical transformations. 
+
+-  **aesthetic(aes)** is “something you can see”. 
+    -  x, y: variable along the x and y axis
+    -  colour: color of geoms according to data
+    -  fill: the inside color of the geom
+    -  group: what group a geom belongs to
+    -  shape: the figure used to plot a point
+    -  linetype: the type of line used (solid, dashed, etc)
+    -  size: size scaling for an extra dimension
+    -  alpha: the transparency of the geom
+
+-  **geometric elements (geoms)**, represent what you actually see in the plot: points, lines, polygons, etc.
+    -  `geom_area()` draws an area plot
+    -  `geom_bar(stat="identity")` draws a bar chart
+    -  `geom_line()` draws a line
+    -  `geom_point()` draws a scatterplot
+    -  `geom_rect()`, draws rectangles
+
+-  **scales** map values in the data space to values in the **aesthetic** space. 
+    -  This includes the use of colour, shape or size. 
+    -  Scales also draw the legend and axes
+
+-  **coordinate(coord)**, describes how data coordinates 
+    -  provides axes and gridlines to help read the graph.
+
+-  **facet** specifies how to break up and display subsets of data as small multiples. 
+
+-  **theme** controls display style, like the font size and background colour. 
+
+:::
+
+
+### Layers
+
+```{r}
+ggplot(aes(x = decimal, y = average), data = co2)
+```
+### Geometry
+
+```{r}
+ggplot(aes(x = decimal, y = average), data = co2)+
+  geom_point() +
+  geom_line(color = "blue")
+```
+-  comparing to the plot provided on <https://gml.noaa.gov/ccgg/trends/>
+
+![](pics/co2_trend_all_gl.png){width=60%}
+
+::: {.callout-caution collapse="true"}
+## Expand To Learn About various geoms
+
+-  geom_abline: Reference lines: horizontal, vertical, and diagonal
+-  geom_area: Ribbons and area plots
+-  geom_bar: Bar charts
+-  geom_boxplot: A box and whiskers plot
+-  geom_contour: 2d contours of a 3d surface
+-  geom_count: Count overlapping points
+-  geom_crossbar: Vertical intervals: lines, crossbars & errorbars
+-  geom_curve: Line segments and curves
+-  geom_density: Smoothed density estimates
+-  geom_dotplot: Dot plot
+-  geom_errorbar: Vertical intervals: lines, crossbars & errorbars
+-  geom_errorbarh: Horizontal error bars
+-  geom_freqpoly: Histograms and frequency polygons
+-  geom_hex: Hexagonal heatmap of 2d bin counts
+-  geom_histogram: Histograms and frequency polygons
+-  geom_hline: Reference lines: horizontal, vertical, and diagonal
+-  geom_jitter: Jittered points
+-  geom_label: Text
+-  geom_line: Connect observations
+-  geom_linerange: Vertical intervals: lines, crossbars & errorbars
+-  geom_map: Polygons from a reference map
+-  geom_path: Connect observations
+-  geom_pointrange: Vertical intervals: lines, crossbars & errorbars
+-  geom_polygon: Polygons
+-  geom_qq: A quantile-quantile plot
+-  geom_qq_line: A quantile-quantile plot
+-  geom_quantile: Quantile regression
+-  geom_raster: Rectangles
+-  geom_ribbon: Ribbons and area plots
+-  geom_rug: Rug plots in the margins
+-  geom_segment: Line segments and curves
+-  geom_smooth: Smoothed conditional means
+-  geom_step: Connect observations
+-  geom_text: Text
+-  geom_tile: Rectangles
+-  geom_violin: Violin plot
+-  geom_vline: Reference lines: horizontal, vertical, and diagonal
+:::
+
+
+### labs, axis, facet, and theme
+
+```{r fig.height= 9, fig.width=9}
+ggplot(aes(x = month, y = average), data = co2)+
+  geom_point(alpha = 0.5) +  
+  geom_line(color = "blue") +
+  labs(
+    x = 'Month',
+    y = 'CO2 mole fraction (ppm)',
+    title = 'Global Monthly Mean CO2'
+  ) +
+  scale_x_continuous(breaks = c(1,5,9,12)) +
+  scale_y_continuous(breaks = seq(from=300,to=450,by=50)) +
+  facet_wrap(vars(year)) +
+  theme_bw()
+  
+```
+
+
+### adding statistics
+
+```{r}
+co2 %>%
+  filter(year == 2021) %>%
+  ggplot(aes(x = month, y = average))+
+  geom_point() +
+  geom_line(color="blue") +
+  geom_smooth(formula = y ~ x, method = 'lm', color = "red") +
+  geom_smooth(formula = y ~ splines::bs(x,3), method = 'lm', color = "orange") +
+  scale_x_continuous(breaks = seq(1,12,1)) +
+  labs(x = 'Month', y = 'CO2 mole fraction (ppm)', title = 'Global Monthly Mean CO2 in 2021')+ 
+  theme_bw()
+```
+
+::: {.callout-note}
+## colours in R
+
+```{r fig.height=9, fig.width=9}
+require(RColorBrewer)
+display.brewer.all()
+```
+
+:::
+
+### Other representative plots
+
+-  Boxplot
+
+Suppose we want to look at CO2 distribution by year
+
+
+```{r}
+ggplot(data = co2, aes(x=year_group, y=average, fill=year_group)) + 
+  geom_boxplot(alpha=0.3) +
+  scale_fill_brewer(palette="Reds")+ 
+  labs(x = 'Year Group', 
+       y = 'CO2 mole fraction (ppm)', 
+       title = 'Global Monthly Mean CO2 by Year Group',
+       fill = 'Year group')+ 
+  theme_bw()
+```
+
+-  Heatmaps
+
+-  we are interested to look at the pattern of CO2 concentration by year and month
+
+-  three data dimensions: year, month, and value of co2
+
+```{r}
+ggplot(data = co2, aes(y=factor(year), x=factor(month), fill=average)) + 
+  geom_tile(colour = "white") +
+  scale_x_discrete(position = "top") +
+  scale_fill_distiller(palette = "Reds", direction = 1) +  
+  labs(x = 'Month', 
+       y = 'Year', 
+       title = 'Global Monthly Mean CO2')+ 
+  theme_bw()
+```
+
+
+-  The R Graph Gallery, <https://r-graph-gallery.com/index.html>
+
+![Best reference for plotting with ggplot2 in R, <https://r-graph-gallery.com/index.html>](pics/rplot_gallery.png)
+
+

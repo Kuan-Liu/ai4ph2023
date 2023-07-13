@@ -1,0 +1,588 @@
+---
+title: "1. Getting started with R"
+---
+
+::: callout-tip
+## Learning Objectives
+
+-  learn about R and RStudio work environment
+-  use R as a calculator
+-  understand objects in R
+-  learn about simple iterative programming in R
+:::
+
+
+
+## 1.1 R and RStudio
+
+-  R is a language and environment for statistical computing and graphics (https://cran.r-project.org/manuals.html). 
+
+-  Many users of R like to use **RStudio** as the preferred interface for programming in R.
+
+-  **RStudio** is an Integrated Development Environment (IDE) for R. 
+    -  easy to navigate
+    -  lots of point and click features and customizations
+    -  Rstudio is not just for R
+
+<!-- It has several nice features, including docked windows for your console and syntax-highlighting editor that supports direct code execution, as well as tools for plotting and workspace management. -->
+
+
+### RStudio layout
+
+When you open RStudio, your interface is made up of four panes as shown below. These can be organised via menu options **View \> Panes \>**
+
+![RStudio layout](pics/intro_to_r_rstudiolayout.jpg)
+
+### R Packages
+
+-  Packages are the fundamental units of reproducible R code. 
+
+-  They include reusable R functions, the documentation that describes how to use them, and sample data.
+
+-  We **install** the package using `install.packages()` function or we can use the Package tab in Rstudio. 
+
+-  Once we have the package installed, we must load the functions from this library so we can use them within R.
+
+```{r echo=T, warning=F, message=F}
+# install.packages(tidyverse, dependencies = T)
+  library(tidyverse) # load package library
+```
+
+### R script
+
+-  We can run code in the console at the prompt where R will evaluate it and print the results. 
+
+-  **best practice** write code in a new script file so it can be saved, edited, and reproduced. 
+
+-  To open a new script, we select **File \> New File \> R Script**.
+
+-  To "run code" that was written in the script file, you can highlight the code lines you wish be evaluated and 
+    -  press CTRL-Enter (windows) 
+    -  Cmd+Return (Mac). 
+    
+-  Additionally, You can comment or uncomment script lines by pressing 
+    -  Ctrl+Shift+C (windows) 
+    -  Cmd+Shift+C (Mac). 
+    
+-  The comment operator in R is `#`. 
+
+-  You can find more RStudio default [keyboard shortcuts here](https://support.rstudio.com/hc/en-us/articles/200711853-Keyboard-Shortcuts-in-the-RStudio-IDE).
+
+
+
+### Customization
+
+-  You can customize your RStudio session under the Options dialog **Tools \> Global Options** menu (or **RStudio \> Preferences** on a Mac). 
+
+-  A list of customization categories can be found [here](https://support.rstudio.com/hc/en-us/articles/200549016-Customizing-RStudio). 
+
+<!-- For example, it's popular to change RStudio appearance and themes (e.g., mordern, sky, dark, and classic). -->
+
+### Working directory
+
+-  The working directory is the default location where R will look for files you want to load and where it will put any files you save. 
+
+-  You can use function `getwd()` to display your current working directory 
+
+-  and use function `setwd()` to set your working directory to a new folder on your computer.
+
+<!-- One of the great things about using RStudio Projects is that when you open a project it will automatically set your working directory to the appropriate location. -->
+
+```{r echo=T, warning=F, message=F}
+getwd() #show my current working directory;
+```
+
+### Getting help with R
+
+-  The help section of R is extremely useful if you need more information about the packages and functions that **you are currently loaded**. 
+
+-  You can initiate R help using the help function `help()` or `?`, the help operator.
+
+```{r echo=T, warning=F, message=F, eval=F}
+help(ggplot)
+```
+
+
+## 1.2 Basic R
+
+
+-  In this subsection, I will briefly outline some common R functions and commands for arithmetic, creating and working with objects such as vector and matrix
+
+
+:::{.callout-warning appearance="simple"}
+
+-   R is case sensitive.
+
+-   Commands are separated by a newline in the console.
+
+-   The \# character can be used to make comments. R does not execute the rest of the line after the \# symbol - it ignores it.
+
+-   Previous commands can be accessed via the up and down arrow keys on the keyboard.
+
+-   When naming in R, avoid using spaces and special characters (i.e., !\@#\$%\^&\*()\_+=;:'"\<\>?/) and avoid leading names with numbers.
+
+-  it's common to see error and warning messages pop up as output in Console
+    -  best solution: searching for online answers!
+
+:::
+
+### Arithmetic
+
+```{r echo=T, message=FALSE, warning=FALSE, eval=FALSE}
+2+3
+3-2
+2*3
+2^3
+3/2
+2 + (2 + 3) * 2 - 5
+```
+
+```{r echo=T, message=FALSE, warning=FALSE, eval=TRUE}
+pi
+exp(1)
+exp(3)
+
+log(exp(1), base = exp(1)) #playing with Euler's number;
+log(3, base = exp(1)) #default natural logarithms;
+log(3, base = 10)
+log10(3)
+log(-1) #warning message;
+```
+
+
+-  Some of the other available useful functions are: `abs(), sqrt(), ceiling(), floor(), trunc(), round()` . 
+
+
+### Working with objects
+
+-  R is an object-oriented programming language.
+
+-  We can create objects and save them in our workspace & environment
+
+
+::: {.callout-note}
+
+An object is composed of three parts: 
+    1)  a value we’re interested in
+    2)  an identifier and 
+    3)  the assignment operator.
+
+-  **Value**: can take any forms
+    -  a number, a string of characters, a data frame, a plot or a function
+    
+-  **identifier** is the name you assign to the value. 
+
+-  **assignment operator** resembles an arrow `<-` and is used to link the value to the identifier.
+
+:::
+
+
+
+```{r echo=T, message=FALSE, warning=FALSE, eval=TRUE}
+# Creating a scalar called "a" and assigning a value of 2
+a<-2
+
+# Creating a scalar called "b" and assigning a value of 3
+b<-3
+
+# Adding "a" and "b" and saving under "d"
+d<-a+b
+
+# Printing the value of "d"
+d
+
+# Updating the value of a scalar
+# Adds 5 to the old value of "a" and saves it again under the name "a".
+a<-a+5 
+a
+```
+
+###  Logic check
+
+-  TRUE or FALSE?
+
+| Operator |                          |
+|:--------:|:------------------------:|
+|    ==    |     exactly equal to     |
+|    !=    |       not equal to       |
+|     <    |         less than        |
+|    <=    |   less than or equal to  |
+|     >    |       greater than       |
+|    >=    | greater than or equal to |
+|  x \| y  |          x or y          |
+|   x & y  |          x and y         |
+
+```{r echo=T, message=FALSE, warning=FALSE, eval=FALSE}
+a<5   # checks if x is less than 5 or not
+a>5   # checks if x is greater than 5 or not
+a<=5  # less or equal
+a>=5  # greater or equal
+a==4   #( == stands for equal)
+a!=4   #( != stands for not equal)
+```
+
+### Data structures
+
+-  Vectors
+-  Matrices
+-  arrays
+-  Data frames
+-  List
+
+![data structures in R - R in Action, Chapter 2 ](pics/datastructure.PNG)
+
+
+#### Vectors
+
+-  vectors can contain same type or mixed type elements.
+
+-  `vector.name <- c(value1, value2, value3, ...)`. 
+
+-  The function `c()` means combine or concatenate and is used to create vectors.
+
+-  Types of elements: 
+    -  numeric(double)
+    -  integer
+    -  character
+    -  logical: TRUE, FALSE
+    -  Special values: NA(not available or missing), NULL(empty), NaN(not a number), Inf(infinite)
+
+> You can use `typeof()` or `class()` to examine an object’s type, or use an `is()` function.
+
+
+```{r echo=T, warning=F, message=F, eval=TRUE}
+# a vector of a single numeric element;
+x <- 3
+x
+typeof(x) #also try class(x);
+is(x)
+
+# a character vector
+x <- c("red", "green", "yellow")
+x
+typeof(x) #also try class(x);
+length(x)
+nchar(x) #number of characters for each element;
+
+# encode a vector as a factor (or category);
+y <- factor(c("red", "green", "yellow", "red", "red", "green"))
+y
+attributes(y)
+as.numeric(y) # we can return factors with numeric labels;
+
+# we can update the levels;
+levels(y)<- c("green","yellow","red")
+attributes(y)
+
+# we can also label numeric vector with factor levels;
+z <- factor(c(1,2,3,1,1,2), levels = c(1,2,3), labels = c("red", "green","yellow"))
+z
+attributes(z)
+
+# using the repeat command;
+# the following line repeats 3, 5 times
+rep(x=3,each=5)   
+
+# using sequence command;
+1:10
+seq(from=1, to=10, by=1)
+
+rep(x=1:2, each = 2)
+```
+
+-  Logical check for a vector
+    -  Just like a scalar, we can evaluate logical conditions using a vector as well. 
+    -  This is an _element-wise_ operation. 
+    -  R will check every element of the vector
+    -  The output will be a TRUE/FALSE vector.
+
+```{r echo=T, warning=F, message=F, eval=TRUE}
+#Let's star with a new vector which has 5 elements
+x<- c(3,6,2,8,10)
+x>5   
+x==2
+sum(x>5)
+```
+
+
+-  select or remove elements from a vector
+    -  we use the open bracket `[ ]` after the vector and use index to operate.
+
+```{r echo=T, warning=F, message=F, eval=TRUE}
+#Starting with same x vector
+# x= c(3,6,2,8,10)
+
+x[1]          # gives us the first element
+x[c(1,3,4) ]   # return the 1st, 3rd and 4th element
+
+x[-1]         # remove the first element
+x[-1:-2]      # remove first and second elements
+x[-c(1,2)]
+```
+
+-  Calculating summary statistics of a vector
+
+```{r echo=T, warning=F, message=F, eval=TRUE}
+set.seed(123)
+r <- sample(x = 1:100, size = 100, replace = TRUE)
+mean(r)  #calculate the mean of a vector
+var(r)   #variance of a vector
+sd(r)    #standard deviation of a vector
+min(r)   #minimum of a vector
+max(r)   #maximum of a vector
+median(r)#median
+range(r) #range
+```
+
+
+#### Matrices
+
+-  matrices have two dimensions, rows and columns
+
+```{r echo=T, warning=F, message=F, eval=TRUE}
+# matrix in R;
+matrix(data = 1:16, nrow=4, ncol=4, byrow=TRUE)
+matrix(data = 1:16, nrow=4, ncol=4, byrow=FALSE)
+
+# creating matrix using diagonal; 
+diag(c(1,1,1))
+
+# matrix calculation;
+X <- matrix(data = 1:16, nrow=4, ncol=4, byrow=TRUE)
+diag(X)
+t(X) #transpose;
+
+Y <- matrix(seq(1,32, by=2), nrow=4, byrow=T)
+Y
+
+# matrix operation;
+Y + X
+Y - X
+
+3 * X
+X * Y
+X %*% Y #inner product;
+```
+
+#### Data frames
+
+-  A **data frame** is a group of vectors of the same length.
+
+-  Two dimensions: columns are variables and rows are observations
+
+-  Unlike matrix, a data frame can contain different data types (e.g., numeric or character)
+
+```{r echo=T, warning=F, message=F, eval=TRUE}
+site_id <- c("A", "B", "C", "D")  #identifies the soil sampling site;
+soil_pH <- c(6.1, 7.4, 5.1, 6)  #soil pH
+num_species <- c(17, 23, 7, 15)  #number of species
+treated <- c("yes", "yes", "no", "no")  #treatment status;
+
+# use data.frame function to create a data frame;
+soil_data <- data.frame(site_id, soil_pH, num_species, treated)
+
+# view data;
+soil_data
+
+str(soil_data)
+dim(soil_data)
+nrow(soil_data)
+ncol(soil_data)
+colnames(soil_data)
+```
+
+#### Lists
+
+-  highly flexible objects
+-  **lists can contain anything as their elements**
+
+```{r echo=T, warning=F, message=F, eval=FALSE}
+example_list <- list(
+  num = sep(from=1, to=10, by=2),
+  char = c("apple", "pineapple"),
+  logic = c(TRUE, TRUE, FALSE)
+)
+```
+
+
+## 1.3 Advanced topics - iterative programming
+
+###  if statements in R
+
+-  If statements in R has got this following structure `if (condition){expression}`
+
+A simple example:
+
+```{r}
+x<-3
+if(x==3){print("x is 3")}
+```
+
+
+### if else statement 
+
+```{r eval=FALSE}
+if(condition){
+  expression1
+  } else {
+  expression2
+}
+```
+
+-  we can also use `ifelse()` function, `ifelse(condition, expression 1, expression 2)`
+
+```{r eval=TRUE}
+y <- c(6:-4)
+sqrt(y)  #- gives warning
+sqrt(ifelse(y >= 0, x, NA))  # no warning
+```
+
+### multiple conditions
+
+```{r eval=FALSE}
+if (condition1) {
+    expression1
+} else if (condition2) {
+    expression2
+} else if (condition3) {
+    expression3
+} else {
+    expression4
+}
+```
+
+```{r}
+# current value of x is 3
+if(x==4){
+  print("x is 4")
+}else if (x>4){
+  print("x is greater than 4")
+}else if (x<4){
+    print("x is less than 4")
+  }
+```
+
+### For Loops
+
+-  perform a particular action for every iteration of some sequence
+
+```{r eval=FALSE}
+for (i in sequence){
+  expression
+}
+```
+
+-  a simple example
+
+```{r}
+for (month in 1:12) {
+    print(paste('Month:', month))
+}
+```
+
+-  a slightly more complex example combining for loop and if statements - counting even numbers 
+
+```{r}
+x <- c(2,5,3,9,8,11,6)
+count <- 0
+for (val in x) {
+if(val %% 2 == 0)  count = count+1
+}
+print(count)
+```
+
+
+### apply family
+
+-  apply family functions can be used in the same way as a for loop
+
+-  `apply()` 
+    - apply over the margins of an array (e.g. the -  rows or columns of a matrix)
+-  `lapply()` 
+    - apply over an object and return list
+-  `sapply()` 
+    - apply over an object and return a simplified object (an array) if possible
+-  `vapply()` 
+    - similar to sapply but you specify the type of object returned by the iterations
+-  `mapply()`
+    -  multivariate version of `sapply()`
+-  `tapply()`
+    - used to apply a function over subsets of a vector
+
+
+```{r}
+# a matrix with apply;
+mymatrix<-matrix(1:9,nrow=3)
+mymatrix
+
+# calculate row sum;
+apply(X=mymatrix,MARGIN=1,FUN = sum) 
+
+# a list with lapply
+mylist<-list(A=matrix(1:9,nrow=3),B=1:5,C=8)
+
+# calculate sum for each element of the list;
+lapply(mylist,FUN = sum)
+
+# calculate sum for each element of the list and simplify it to a vector;
+sapply(mylist, FUN = sum)
+```
+
+
+::: {.callout-tip}
+## Tips
+
+-  Where possible, use vectorized operations instead of for loops to make code faster and more concise.
+
+-  Use functions such as apply instead of for loops to operate on the values in a data structure.
+:::
+
+###  Effectively use loops in statistically modelling
+
+-  This can be handy in statistical modelling!
+
+-  Data: Motor Trend Car Road Tests
+    -  A data frame with 32 observations on 11 (numeric) variables.
+        -  mpg	Miles/(US) gallon
+        -  cyl	Number of cylinders
+        -  disp	Displacement (cu.in.)
+        -  hp	Gross horsepower
+        -  drat	Rear axle ratio
+        -  wt	Weight (1000 lbs)
+        -  qsec	1/4 mile time
+        -  vs	Engine (0 = V-shaped, 1 = straight)
+        -  am	Transmission (0 = automatic, 1 = manual)
+        -  gear	Number of forward gears
+        -  carb	Number of carburetors
+
+
+```{r warning=FALSE, message=FALSE}
+library(DT)
+datatable(mtcars,
+          options = list(dom = 't'))
+```
+
+
+```{r}
+# creating a list a variables that are predictive of the fuel consumption;
+
+predictors <- colnames(mtcars)[-1]
+predictors
+
+#run unadjusted regression analysis for each predictor;
+# m1 <- lm(mpg~cyl,data = mtcars)
+# m2 <- lm(mpg~disp,data = mtcars)
+# m3 <- lm(mpg~hp,data = mtcars)
+
+# make a list of model formulars: list(mpg ~ cyl, mpg ~ disp, ...);
+list_model_formulas <- sapply(predictors,function(x)as.formula(paste('mpg~',x)))
+
+# making a list of unadjusted models;
+list_models <- lapply(list_model_formulas,function(x){lm(x,data=mtcars)})
+
+#extract model results;
+results <- lapply(list_models, function(x){return(summary(x)$coef)})
+results
+```
+
+

@@ -1,11 +1,78 @@
 ---
-title: "AI4PH2024_CausalWorkshop"
+title: "Tutorial on Causal Inference Using Machine Learning Methods"
+author: "Kuan Liu"
+subtitle: "AI4PH Summer Institute, Aug 18, 2023"
+format: 
+  html: 
+    code-block-bg: true
 ---
 
-This is a Quarto website.
+# Welcome
 
-To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
+-   Welcome to the causal inference machine learning tutorial!
+-   Workshop materials in the github repository [AI4PH2023_CausalWorkshop](https://github.com/Kuan-Liu/AI4PH2023_CausalWorkshop)
+
+# Learning objectives
+
+Causal inference methods, such as the propensity score analysis, have been established to permit causal inference from observational data. In recent years, a growing number of studies have explored the use of machine learning techniques in the causal modelling of complex health data subjected to high-dimensional confounding and complex causal structure. 
+
+The **objective** of this tutorial is to introduce and demonstrate key machine learning methods used in causal inference for cross-sectional data with examples and ready-to-use code in the R programming language. 
+
+By the end of this session, participants should be able to perform causal analysis in R using several machine learning approaches, such as gradient boosting, regression trees, and SuperLearner.
+
+
+# Tutorial outline
+
+|     Time      |                        Topic                         |
+|:-------------:|:----------------------------------------------------:|
+|  9:00 - 9:10  |              [Introduction](index.qmd)               |
+|  9:10 - 9:45  |    [Session 1: Get Started with R](session1.qmd)     |
+| 9:45 - 10:00  |               Questions + Coffee break               |
+| 10:00 - 10:45 |  [Session 2: Working with Data](session2.qmd)  |
+| 10:45 - 11:00 |               Questions + Coffee break               |
+| 11:00 - 11:45 | [Session 3: Statistical Analysis in R](session3.qmd) |
+| 11:45 - 12:00 |              Conclusions and Questions               |
+
+# In preparation for the workshop
+
+Participants are required to follow the next steps before the day of the workshop:
+
+1.  Install R and R Studio
+
+    -   Windows operating system
+        -   install R, <https://cran.r-project.org/bin/windows/base/>
+        -   install RStudio, <https://posit.co/download/rstudio-desktop/#download>
+    -   macOS operating system
+        -   install R, <https://cran.r-project.org/bin/macosx/>
+        -   install RStudio, <https://posit.co/download/rstudio-desktop/#download>
+
+2.  Verify access to the course page, <https://kuan-liu.github.io/Rworkshop/>
+
+3.  Clone or download the workshop repository: <https://github.com/Kuan-Liu/Rworkshop>
 
 ```{r}
-1 + 1
+
 ```
+
+# Reference and resource
+
+-   [R for Data Science by Hadley Wickham & Garrett Grolemund](http://r4ds.hadley.nz/)
+
+-   [ggplot2: elegant graphics for data analysis by Hadley Wickham](https://ggplot2-book.org/index.html)
+
+
+R for Data Science             |  ggplot2: elegant graphics for data analysis
+:-------------------------:|:-------------------------:
+![](https://d33wubrfki0l68.cloudfront.net/b88ef926a004b0fce72b2526b0b5c4413666a4cb/24a30/cover.png){width=60%}  |  ![](https://ggplot2-book.org/cover.jpg){width=60%}
+
+
+# About me
+
+-   I am an Assistant Professor in Biostatistics and Health Services Research at the University of Toronto
+-   My primary research focuses on developing methodology for statistical inference with complex longitudinal data in comparative effectiveness research
+    -   causal inference
+    -   Bayesian statistics
+    -   longitudinal data analysis
+    -   joint modelling
+    -   bias analysis
+-   My ties to forestry and ecology `r emoji::emoji("evergreen_tree")`
