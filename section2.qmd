@@ -13,3 +13,27 @@ format:
 -  G-computation using machine learning techniques
 :::
 
+##  2.1 Proposensity score analysis using machine learning technqiues
+
+###  Super (Machine) Learning
+
+-  Super learning can be used to obtain robust estimator. In a nut-shell it uses loss-function based ML tool and cross-validation to obtain the best prediction of model parameter of interest, based on a **weighted average of a library of machine learning algorithms**.
+
+-  Guide to SuperLearner by Chris Kennedy at https://cran.r-project.org/web/packages/SuperLearner/vignettes/Guide-to-SuperLearner.html
+
+-  List of machine learning algorithms under SuperLearner R package
+
+```{r echo=TRUE, warning=FALSE, message=FALSE}
+library(SuperLearner)
+listWrappers()
+```
+
+###  Using SL with PS approach
+
+
+```{r echo=TRUE, warning=FALSE, message=FALSE}
+require(tidyverse)
+data2<-readRDS("data/data2")
+covariates <- select(data2, -c(id, A, Y))
+baselines <- colnames(covariates)
+```
