@@ -1,18 +1,16 @@
 project:
   type: website
   title: "Causal Tutorial, AI4PH Summer Institute 2023"
-  execute-dir: project
   output-dir: docs
   render:
       - index.qmd
-      - session1.qmd
-      # - session2.qmd
-      # - session3.qmd
+      - section1.qmd
+      - section2.qmd
 
 website:
   title: "Tutorial on Causal Inference Using Machine Learning Methods"
   site-url: https://kuan-liu.github.io/AI4PH2023_CausalWorkshop/
-  repo-url: https://github.com/Kuan-Liu/AI4PH2023_CausalWorkshop
+  repo-url: https://github.com/Kuan-Liu/AI4PH2023_CausalWorkshop/
   page-footer:
     right: "This page is built with [Quarto](https://quarto.org/)."
     left: "[Kuan Liu](https://www.kuan-liu.com), University of Toronto @ 2023"
@@ -30,9 +28,8 @@ website:
     search: true
     contents:
         - index.qmd
-        - session1.qmd
-        # - session2.qmd
-        # - session3.qmd
+        - section1.qmd
+        - section2.qmd
   page-navigation: true
 
 format:

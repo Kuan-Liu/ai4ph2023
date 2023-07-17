@@ -1,0 +1,15 @@
+---
+title: "2. Using machine learning techniques for causal analysis"
+bibliography: book.bib
+author: "Kuan Liu"
+format: 
+  html: 
+    code-block-bg: true
+---
+
+::: callout-tip
+## Outlines
+-  Propensity score methods machine learning techniques
+-  G-computation using machine learning techniques
+:::
+

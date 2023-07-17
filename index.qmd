@@ -1,5 +1,6 @@
 ---
 title: "Tutorial on Causal Inference Using Machine Learning Methods"
+bibliography: book.bib
 author: "Kuan Liu"
 subtitle: "AI4PH Summer Institute, Aug 18, 2023"
 format: 
@@ -20,20 +21,15 @@ The **objective** of this tutorial is to introduce and demonstrate key machine l
 
 By the end of this session, participants should be able to perform causal analysis in R using several machine learning approaches, such as gradient boosting, regression trees, and SuperLearner.
 
-
 # Tutorial outline
 
-|     Time      |                        Topic                         |
-|:-------------:|:----------------------------------------------------:|
-|  9:00 - 9:10  |              [Introduction](index.qmd)               |
-|  9:10 - 9:45  |    [Session 1: Get Started with R](session1.qmd)     |
-| 9:45 - 10:00  |               Questions + Coffee break               |
-| 10:00 - 10:45 |  [Session 2: Working with Data](session2.qmd)  |
-| 10:45 - 11:00 |               Questions + Coffee break               |
-| 11:00 - 11:45 | [Session 3: Statistical Analysis in R](session3.qmd) |
-| 11:45 - 12:00 |              Conclusions and Questions               |
+-  Introduction
+-  [Section 1: Conventional causal approaches](section1.qmd)
+-  [Section 1: Machine learning causal approaches](section2.qmd)
+-  Hands-on practice replicating tutorial examples (15-20 mins)
 
-# In preparation for the workshop
+
+# In preparation for the Tutorial
 
 Participants are required to follow the next steps before the day of the workshop:
 
@@ -46,33 +42,66 @@ Participants are required to follow the next steps before the day of the worksho
         -   install R, <https://cran.r-project.org/bin/macosx/>
         -   install RStudio, <https://posit.co/download/rstudio-desktop/#download>
 
-2.  Verify access to the course page, <https://kuan-liu.github.io/Rworkshop/>
+2.  Verify access to the course page, <https://kuan-liu.github.io/AI4PH2023_CausalWorkshop/>
 
-3.  Clone or download the workshop repository: <https://github.com/Kuan-Liu/Rworkshop>
+3.  Clone or download the workshop repository: <https://github.com/Kuan-Liu/AI4PH2023_CausalWorkshop>
 
-```{r}
+4.  Install the following R packages
+    -  data import and processing and descriptive analysis: tidyverse, tableone, naniar
+    -  causal analysis: MatchIt; cobalt; boot; survey; gfoRmula
+    -  machine learning: twang, SuperLearner; xgboost; caret; glmnet
 
+
+# Dataset - The Right Heart Catheterization
+
+For this tutorial, we will be using the same right heart catheterization dataset you have seen this morning. The original JAMA paper [@connors1996effectiveness] and the data csv file can be found in the tutorial repo.
+
+-  We follow Brice's morning session and this tutorial paper [@smith2022introduction], which both used the same rhc dataset, to guide our data processing and causal analysis.
+
+
+## Data import and processing
+
+```{r echo=TRUE, warning=FALSE, message=FALSE}
+library(tidyverse)
+data <- read.csv("data/rhc.csv", header=T)
+
+# define exposure variable
+data$A <- ifelse(data$swang1 =="No RHC", 0, 1)
+
+# outcome is dth30, a binary outcome measuring survival status at day 30;
+data$Y <- ifelse(data$dth30 =="No", 0, 1)
 ```
 
-# Reference and resource
+## Data visualization on missing values
 
--   [R for Data Science by Hadley Wickham & Garrett Grolemund](http://r4ds.hadley.nz/)
+```{r echo=TRUE, warning=FALSE, message=FALSE, fig.align='center', fig.height=9}
+library(naniar)
+gg_miss_var(data, facet=A, show_pct = TRUE)
+# try changing facet to dth30, this examines missingness by outcome;
+```
 
--   [ggplot2: elegant graphics for data analysis by Hadley Wickham](https://ggplot2-book.org/index.html)
+## Finalizing dataset for causal analysis
+
+```{r echo=TRUE, warning=FALSE, message=FALSE, fig.align='center', fig.height=9}
+# we create our analysis data by removing variables with large proportion of missing;
+# and variables not used in the analysis;
+data2 <- select(data, -c(cat2, adld3p, urin1, swang1,
+                         sadmdte, dschdte, dthdte, lstctdte, death, dth30,
+                         surv2md1, das2d3pc, t3d30, ptid)) 
+data2 <- rename(data2, id = X)
+
+# display data on Quarto page;
+library(DT)
+data2 %>% datatable(
+  rownames = FALSE,
+  options = list(
+    columnDefs = list(list(className = 'dt-center', 
+                      targets = 0:4))))
+
+# verify data structure;
+str(data2)
+saveRDS(data2,file="data/data2")
+```
 
 
-R for Data Science             |  ggplot2: elegant graphics for data analysis
-:-------------------------:|:-------------------------:
-![](https://d33wubrfki0l68.cloudfront.net/b88ef926a004b0fce72b2526b0b5c4413666a4cb/24a30/cover.png){width=60%}  |  ![](https://ggplot2-book.org/cover.jpg){width=60%}
 
-
-# About me
-
--   I am an Assistant Professor in Biostatistics and Health Services Research at the University of Toronto
--   My primary research focuses on developing methodology for statistical inference with complex longitudinal data in comparative effectiveness research
-    -   causal inference
-    -   Bayesian statistics
-    -   longitudinal data analysis
-    -   joint modelling
-    -   bias analysis
--   My ties to forestry and ecology `r emoji::emoji("evergreen_tree")`
