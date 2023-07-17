@@ -2,7 +2,7 @@
 title: "Tutorial on Causal Inference Using Machine Learning Methods"
 bibliography: book.bib
 author: "Kuan Liu"
-subtitle: "AI4PH Summer Institute, Aug 18, 2023"
+subtitle: "AI4PH Summer Institute, July 18, 2023"
 format: 
   html: 
     code-block-bg: true
