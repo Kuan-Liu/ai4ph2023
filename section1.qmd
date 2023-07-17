@@ -195,7 +195,12 @@ knitr::include_graphics("image/F2.large.jpg")
 ```
  
        
-    
+**Sensitivity analysis for unmeasured confounding**
+
+-  E-value, see online calculator https://www.evalue-calculator.com/
+-  You can calculate e-value in R as well using package Evalue, see https://louisahsmith.github.io/evalue/index.html
+
+
     
     
     

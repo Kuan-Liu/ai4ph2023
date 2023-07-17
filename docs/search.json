@@ -60,7 +60,7 @@
     "href": "section1.html#general-guildelines-on-implementing-psa",
     "title": "1. The implementation of standard causal inference aproaches in R",
     "section": "1.3 General guildelines on implementing PSA",
-    "text": "1.3 General guildelines on implementing PSA\nHere providing a list a references that covers guildelines are PSA analysis and its reporting\n\nPS matching (Austin 2007)\nPSA analysis for cancer research (Yao et al. 2017)\nPSA analysis for neurology (Austin et al. 2021)\nPSA analysis for multiple sclerosis (Karim et al. 2022)\n\n\nChecklist for the design and analysis of studies using PS methods\n(Austin et al. 2021)\n\n\n\n\n\n\n\nChecklist for reporting of studies using PS methods\n(Austin et al. 2021)"
+    "text": "1.3 General guildelines on implementing PSA\nHere providing a list a references that covers guildelines are PSA analysis and its reporting\n\nPS matching (Austin 2007)\nPSA analysis for cancer research (Yao et al. 2017)\nPSA analysis for neurology (Austin et al. 2021)\nPSA analysis for multiple sclerosis (Karim et al. 2022)\n\n\nChecklist for the design and analysis of studies using PS methods\n(Austin et al. 2021)\n\n\n\n\n\n\n\nChecklist for reporting of studies using PS methods\n(Austin et al. 2021)\n\n\n\n\n\nSensitivity analysis for unmeasured confounding\n\nE-value, see online calculator https://www.evalue-calculator.com/\nYou can calculate e-value in R as well using package Evalue, see https://louisahsmith.github.io/evalue/index.html"
   },
   {
     "objectID": "section2.html",

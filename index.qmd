@@ -48,8 +48,8 @@ Participants are required to follow the next steps before the day of the worksho
 
 4.  Install the following R packages
     -  data import and processing and descriptive analysis: tidyverse, tableone, naniar
-    -  causal analysis: MatchIt; cobalt; boot; survey; gfoRmula
-    -  machine learning: twang, SuperLearner; xgboost; caret; glmnet
+    -  causal analysis: MatchIt; cobalt; boot; survey; gfoRmula; E-value
+    -  machine learning: SuperLearner; xgboost; bartCause; caret, glmnet
 
 
 # Dataset - The Right Heart Catheterization
