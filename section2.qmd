@@ -10,16 +10,18 @@ format:
 ::: callout-tip
 ## Outlines
 -  Propensity score methods machine learning techniques
--  G-computation using machine learning techniques
+    -  gradient boosting machines
+    -  super learner
+    -  Bayesian additive regression trees
 :::
 
-##  2.1 Proposensity score analysis using machine learning technqiues
+#  Proposensity score analysis using machine learning technqiues
 
-###  Super (Machine) Learning
+##  2.1 Super (Machine) Learning
 
 -  Super learning can be used to obtain robust estimator. In a nut-shell it uses loss-function based ML tool and cross-validation to obtain the best prediction of model parameter of interest, based on a **weighted average of a library of machine learning algorithms**.
 
--  Guide to SuperLearner by Chris Kennedy at https://cran.r-project.org/web/packages/SuperLearner/vignettes/Guide-to-SuperLearner.html
+-  Guide to SuperLearner by Chris Kennedy at [https://cran.r-project.org/web/packages/SuperLearner/vignettes/Guide-to-SuperLearner.html](https://cran.r-project.org/web/packages/SuperLearner/vignettes/Guide-to-SuperLearner.html)
 
 -  List of machine learning algorithms under SuperLearner R package
 
@@ -28,12 +30,175 @@ library(SuperLearner)
 listWrappers()
 ```
 
-###  Using SL with PS approach
+##  2.2 Using machine learning methods with PSA
+
+-  We can use ML to model our propensity score model
+-  The use of machine learning methods is more flexible than parametric methods (i.e., logistic regression)
+    -  Not without a cost, usually the more flexible the methods are the more one is at risk of overfitting; Too much noise considered in the modelling often results in poor coverage probability.
+    -  There is no one approach that out performs others, thus which approach to use should be evaluated case by case. 
+    -  ML is generally suggested for large enough cohort and for modelling large set of covariates.
+    -  It's always suggested to include results from conventional logistic regression approach as a sensitivity analysis in comparison of ML approaches.
 
 
+-  Many approaches are included in the WeightIt package, [https://ngreifer.github.io/WeightIt/reference/method_super.html](https://ngreifer.github.io/WeightIt/reference/method_super.html)
+    -  "gbm", Propensity score weighting using generalized boosted modeling (also known as gradient boosting machines)
+    -  "super", Propensity score weighting using SuperLearner
+    -  "bart", Propensity score weighting using Bayesian additive regression trees (BART)
+        -  Bayesian Additive Regression Trees (BART) is a sum-of-trees model for approximating an unknown function. To avoid overfitting (of decision tree), BART uses a regularization prior that forces each tree to be able to explain only a limited subset of the relationships between the covariates and the predictor variable.
+
+
+**Setting up data and PS model formula**
 ```{r echo=TRUE, warning=FALSE, message=FALSE}
 require(tidyverse)
+require(WeightIt)
 data2<-readRDS("data/data2")
 covariates <- select(data2, -c(id, A, Y))
 baselines <- colnames(covariates)
+
+ps.formula <- as.formula(paste("A~", 
+                paste(baselines, collapse = "+")))
 ```
+
+### 2.2.1 PS model with gradient boosting
+
+-  computationally more demanding and it might take several minutes to run.
+
+```{r echo=TRUE, eval=FALSE, warning=FALSE, message=FALSE}
+IPTW_gbm <- weightit(ps.formula,
+                 data = data2,
+                 method = "gbm",
+                 stabilize = TRUE)
+# saving the model output as a R object to avoid rerunning the same model;
+saveRDS(IPTW_gbm, file = "data/IPTW_gbm")
+```
+
+```{r echo=TRUE, warning=FALSE, message=FALSE}
+# reading saved model output;
+require(sjPlot)
+IPTW_gbm <- readRDS(file = "data/IPTW_gbm")
+summary(IPTW_gbm)
+
+fit2_gbm <- glm(Y ~ A, 
+            family = "binomial",
+            weights = IPTW_gbm$weights,
+            data = data2)
+tab_model(fit2_gbm)
+```
+
+### 2.2.2 PS model with Super Learner
+
+```{r echo=TRUE, eval=FALSE, warning=FALSE, message=FALSE}
+IPTW_SL <- weightit(ps.formula,
+                 data = data2,
+                 method = "super",
+                 SL.library=c("SL.randomForest", "SL.glmnet", "SL.nnet"), 
+                 stabilize = TRUE)
+# saving the model output as a R object to avoid rerunning the same model;
+saveRDS(IPTW_SL, file = "data/IPTW_SL")
+```
+
+```{r echo=TRUE, warning=FALSE, message=FALSE}
+# reading saved model output;
+IPTW_SL <- readRDS(file = "data/IPTW_SL")
+summary(IPTW_SL)
+
+fit2_SL <- glm(Y ~ A, 
+            family = "binomial",
+            weights = IPTW_SL$weights,
+            data = data2)
+tab_model(fit2_SL)
+```
+
+
+### 2.2.3 PS model with Bayesian additive regression trees
+
+-  A much faster algorithm comparing to gbm and SL.
+
+```{r echo=TRUE, eval=FALSE, warning=FALSE, message=FALSE}
+IPTW_bart <- weightit(ps.formula,
+                 data = data2,
+                 method = "bart",
+                 stabilize = TRUE)
+# saving the model output as a R object to avoid rerunning the same model;
+saveRDS(IPTW_bart, file = "data/IPTW_bart")
+```
+
+```{r echo=TRUE, warning=FALSE, message=FALSE}
+# reading saved model output;
+IPTW_bart <- readRDS(file = "data/IPTW_bart")
+summary(IPTW_bart)
+
+fit2_bart <- glm(Y ~ A, 
+            family = "binomial",
+            weights = IPTW_bart$weights,
+            data = data2)
+tab_model(fit2_bart)
+```
+
+> Comparing the three approaches given the rhc data, it appears that SuperLearner returns good stable weights (no visible extreme weights). This indicates a great fit of the PS model.
+
+-  Similar as before, we can check for PS distribution and balancing. Additionally, we can perform subgroup and sensitivity analysis as mentioned before.
+
+**Forest plot to display results from different approaches**
+
+```{r echo=TRUE, warning=FALSE, message=FALSE, fig.align='center', fig.width=9}
+plotdata <- data.frame(
+  method = c("PS-match", "PS-IPTW", "PS-IPTW-Trim", "PS-IPTW-gbm", "PS-IPTW-SL", "PS-IPTW-bart"),  
+  est.OR = c(1.23, 1.30, 1.34, 1.27, 1.35, 1.30),
+  conf.low = c(1.12, 1.16, 1.19, 1.12, 1.17, 1.16),
+  conf.high = c(1.36, 1.45, 1.50, 1.43, 1.56, 1.46))
+
+p <- 
+  plotdata |>
+  ggplot(aes(y = fct_rev(method))) + 
+  theme_classic() +
+  geom_point(aes(x=est.OR), shape=15, size=3) +
+  geom_linerange(aes(xmin=conf.low, xmax=conf.high)) +
+  geom_vline(xintercept = 1, linetype="dashed") +
+  labs(x="Odds Ratio", y="") +
+  coord_cartesian(ylim=c(1,7), xlim=c(0.7, 2)) +
+  annotate("text", x = 0.8, y = 7, label = "RHC protective") +
+  annotate("text", x = 1.2, y = 7, label = "RHC harmful") + 
+  theme(axis.line.y = element_blank(),
+        axis.ticks.y= element_blank(),
+        axis.text.y= element_blank(),
+        axis.title.y= element_blank())
+
+
+plotdata_OR <- plotdata |>
+  # round estimates and 95% CIs to 2 decimal places for journal specifications
+  mutate(estimate_label = paste0(est.OR, " (", conf.low, "-", conf.high, ")"))  |>
+  # add a row of data to be shown on the forest plot as column names;
+  bind_rows(
+    data.frame(
+      method = "Method",
+      estimate_label = "Odds Ratio (95% CI)"
+    )
+  ) |>
+  mutate(method = fct_rev(fct_relevel(method, "Method")))
+
+p_left <-
+  plotdata_OR  |>
+  ggplot(aes(y = method)) +
+  geom_text(aes(x = 0, label = method), hjust = 0, fontface = "bold")+
+  geom_text(
+    aes(x = 2, label = estimate_label),
+    hjust = 0,
+    fontface = ifelse(plotdata_OR$estimate_label == "Odds Ratio (95% CI)", "bold", "plain")
+  )+
+  theme_void() +
+  coord_cartesian(xlim = c(0, 4))
+
+library(patchwork)
+layout <- c(
+  area(t = 0, l = 0, b = 15, r = 4), # left plot, starts at the top of the page (0) and goes 30 units down and 3 units to the right
+  area(t = 1, l = 5, b = 15, r = 9) # middle plot starts a little lower (t=1) because there's no title. starts 1 unit right of the left plot (l=4, whereas left plot is r=3), goes to the bottom of the page (30 units), and 6 units further over from the left plot (r=9 whereas left plot is r=3)
+)
+# final plot arrangement
+p_left + p +plot_layout(design = layout)
+
+```
+
+
+
+

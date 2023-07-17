@@ -120,7 +120,6 @@ sjPlot::tab_model(fit1)
 
 ```{r echo=TRUE, warning=FALSE, message=FALSE}
 library(WeightIt)
-
 IPTW <- weightit(ps.formula,
                  data = data2,
                  method = "glm", #using the default logistic regression;
@@ -194,11 +193,68 @@ knitr::include_graphics("image/F1.large.jpg")
 knitr::include_graphics("image/F2.large.jpg")
 ```
  
+**Subgroup analysis**
+-  There are several good resources on how to estimate subgroup treatment effects:[@eeren2015estimating], [@wang2018relative], [@dong2020subgroup],[@yang2021propensity]
+
+-  The Subgroup Balancing Propensity Score approach from [@dong2020subgroup] has been incorporated in the WeightIt package.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# example subgroup analysis by sex;
+(fit2<- weightit(treat ~ age + educ + married +
+                nodegree + race + re74, data = lalonde,
+                method = "glm", estimand = "ATT"))
+
+IPTW_sex <- weightit(ps.formula,
+                 data = data2,
+                 method = "glm", #using the default logistic regression;
+                 by = "sex",
+                 stabilize = TRUE)
+
+subgroup_sex <- sbps(IPTW, IPTW_sex)
+summary(subgroup_sex)
+```
+
+**Checking PS distribution by subgroups**
+```{r echo=TRUE, message=FALSE, warning=FALSE,fig.align='center'}
+bal.plot(IPTW_sex, 
+         cluster = "sex",
+         which="both",
+         type = "density",
+         colors = c("red","blue"))
+```
+
+**checking balance by subgroups**
+
+```{r echo=TRUE, message=FALSE, warning=FALSE, fig.align='center',fig.height=9}       
+# checking balance by subgroups;
+# bal.tab(IPTW_sex, cluster = "sex")
+love.plot(IPTW_sex, 
+          cluster = "sex", 
+          grid = TRUE,
+          stars = "std",
+          thresholds = c(m = .1),
+          colors = c("red","blue"))
+```
+
+
+**fitting subgroup specific causal outcome models**
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+fit2.f <- glm(Y ~ A, 
+            family = "binomial",
+            weights = IPTW_sex$weights[IPTW_sex$by=="Female"],
+            data = subset(data2,sex=="Female"))
+fit2.m <- glm(Y ~ A, 
+            family = "binomial",
+            weights = IPTW_sex$weights[IPTW_sex$by=="Male"],
+            data = subset(data2,sex=="Male"))
+tab_model(fit2.f, fit2.m)
+```
+
        
 **Sensitivity analysis for unmeasured confounding**
 
--  E-value, see online calculator https://www.evalue-calculator.com/
--  You can calculate e-value in R as well using package Evalue, see https://louisahsmith.github.io/evalue/index.html
+-  E-value, see online calculator [https://www.evalue-calculator.com/](https://www.evalue-calculator.com/)
+-  You can calculate e-value in R as well using package Evalue, see [https://louisahsmith.github.io/evalue/index.html](https://louisahsmith.github.io/evalue/index.html)
 
 
     

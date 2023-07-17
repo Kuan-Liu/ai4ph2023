@@ -924,13 +924,12 @@ Medicare]</td>
 <p><strong>Obtaining weights using WeightIt package</strong></p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(WeightIt)</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>IPTW <span class="ot">&lt;-</span> <span class="fu">weightit</span>(ps.formula,</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">data =</span> data2,</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">method =</span> <span class="st">"glm"</span>, <span class="co">#using the default logistic regression;</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>                 <span class="at">stabilize =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>IPTW</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>IPTW <span class="ot">&lt;-</span> <span class="fu">weightit</span>(ps.formula,</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">data =</span> data2,</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">method =</span> <span class="st">"glm"</span>, <span class="co">#using the default logistic regression;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">stabilize =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>IPTW</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>A weightit object
  - method: "glm" (propensity score weighting with GLM)
@@ -1181,10 +1180,186 @@ Adjusted   2561.57 1137.96</code></pre>
 <p><img src="image/F2.large.jpg" class="img-fluid" style="width:100.0%"></p>
 </div>
 </div>
+<p><strong>Subgroup analysis</strong> - There are several good resources on how to estimate subgroup treatment effects:<span class="citation" data-cites="eeren2015estimating">(<a href="#ref-eeren2015estimating" role="doc-biblioref">Eeren et al. 2015</a>)</span>, <span class="citation" data-cites="wang2018relative">(<a href="#ref-wang2018relative" role="doc-biblioref">Wang et al. 2018</a>)</span>, <span class="citation" data-cites="dong2020subgroup">(<a href="#ref-dong2020subgroup" role="doc-biblioref">Dong et al. 2020</a>)</span>,<span class="citation" data-cites="yang2021propensity">(<a href="#ref-yang2021propensity" role="doc-biblioref">Yang et al. 2021</a>)</span></p>
+<ul>
+<li>The Subgroup Balancing Propensity Score approach from <span class="citation" data-cites="dong2020subgroup">(<a href="#ref-dong2020subgroup" role="doc-biblioref">Dong et al. 2020</a>)</span> has been incorporated in the WeightIt package.</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># example subgroup analysis by sex;</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>(fit2<span class="ot">&lt;-</span> <span class="fu">weightit</span>(treat <span class="sc">~</span> age <span class="sc">+</span> educ <span class="sc">+</span> married <span class="sc">+</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>                nodegree <span class="sc">+</span> race <span class="sc">+</span> re74, <span class="at">data =</span> lalonde,</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">method =</span> <span class="st">"glm"</span>, <span class="at">estimand =</span> <span class="st">"ATT"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>A weightit object
+ - method: "glm" (propensity score weighting with GLM)
+ - number of obs.: 614
+ - sampling weights: none
+ - treatment: 2-category
+ - estimand: ATT (focal: 1)
+ - covariates: age, educ, married, nodegree, race, re74</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>IPTW_sex <span class="ot">&lt;-</span> <span class="fu">weightit</span>(ps.formula,</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">data =</span> data2,</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">method =</span> <span class="st">"glm"</span>, <span class="co">#using the default logistic regression;</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">by =</span> <span class="st">"sex"</span>,</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">stabilize =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>subgroup_sex <span class="ot">&lt;-</span> <span class="fu">sbps</span>(IPTW, IPTW_sex)</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(subgroup_sex)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Summary of weights:
+
+ - Overall vs. subgroup proportion contribution:
+         sex = Male sex = Female
+Overall           0            0
+Subgroup          1            1
+
+ - - - - - - - Subgroup sex = Male - - - - - - -
+- Weight ranges:
+           Min                                   Max
+treated 0.4004 |---------------------------| 26.2701
+control 0.5996  |-------|                     8.8109
+
+- Units with 5 greatest weights by group:
+                                            
+           2719   2716   2474   1957    1064
+ treated 6.4907 7.3707 8.2499 9.2112 26.2701
+           2224   1672   1209    821     283
+ control 6.3468 6.6169 7.8151  8.621  8.8109
+
+          Ratio Coef of Var
+treated 65.6135      1.1156
+control 14.6941      0.6237
+overall 65.6135      0.8532
+
+- Effective Sample Sizes:
+            Control  Treated
+Unweighted 1914.000 1278.000
+Weighted   1378.187  569.595
+
+ - - - - - - - Subgroup sex = Female - - - - - - -
+- Weight ranges:
+           Min                                   Max
+treated 0.3626 |--------------------|         9.2546
+control 0.6444  |--------------------------| 12.1700
+
+- Units with 5 greatest weights by group:
+                                           
+           2177   1704   1626    806    765
+ treated 5.8714 6.7055 7.3113 7.7407 9.2546
+           1498   1415   1378    611    432
+ control 5.3371 7.2264 7.5463 7.6013  12.17
+
+          Ratio Coef of Var
+treated 25.5239      0.9529
+control 18.8869      0.6245
+overall 33.5645      0.7508
+
+- Effective Sample Sizes:
+           Control Treated
+Unweighted 1637.00  906.00
+Weighted   1177.92  475.07</code></pre>
+</div>
+</div>
+<p><strong>Checking PS distribution by subgroups</strong></p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bal.plot</span>(IPTW_sex, </span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>         <span class="at">cluster =</span> <span class="st">"sex"</span>,</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">which=</span><span class="st">"both"</span>,</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">type =</span> <span class="st">"density"</span>,</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">colors =</span> <span class="fu">c</span>(<span class="st">"red"</span>,<span class="st">"blue"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="section1_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>checking balance by subgroups</strong></p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># checking balance by subgroups;</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="co"># bal.tab(IPTW_sex, cluster = "sex")</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="fu">love.plot</span>(IPTW_sex, </span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">cluster =</span> <span class="st">"sex"</span>, </span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">grid =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>          <span class="at">stars =</span> <span class="st">"std"</span>,</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>          <span class="at">thresholds =</span> <span class="fu">c</span>(<span class="at">m =</span> .<span class="dv">1</span>),</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>          <span class="at">colors =</span> <span class="fu">c</span>(<span class="st">"red"</span>,<span class="st">"blue"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="section1_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>fitting subgroup specific causal outcome models</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>fit2.f <span class="ot">&lt;-</span> <span class="fu">glm</span>(Y <span class="sc">~</span> A, </span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>            <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">weights =</span> IPTW_sex<span class="sc">$</span>weights[IPTW_sex<span class="sc">$</span>by<span class="sc">==</span><span class="st">"Female"</span>],</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">data =</span> <span class="fu">subset</span>(data2,sex<span class="sc">==</span><span class="st">"Female"</span>))</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>fit2.m <span class="ot">&lt;-</span> <span class="fu">glm</span>(Y <span class="sc">~</span> A, </span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">weights =</span> IPTW_sex<span class="sc">$</span>weights[IPTW_sex<span class="sc">$</span>by<span class="sc">==</span><span class="st">"Male"</span>],</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>            <span class="at">data =</span> <span class="fu">subset</span>(data2,sex<span class="sc">==</span><span class="st">"Male"</span>))</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="fu">tab_model</span>(fit2.f, fit2.m)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table data-quarto-postprocess="true" class="table table-sm table-striped small">
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" style="text-align: center; border-top: double; font-style: normal; font-weight: bold; padding: 0.2cm;">&nbsp;</td>
+<td colspan="3" data-quarto-table-cell-role="th" style="text-align: center; border-top: double; font-style: normal; font-weight: bold; padding: 0.2cm;">Y</td>
+<td colspan="3" data-quarto-table-cell-role="th" style="text-align: center; border-top: double; font-style: normal; font-weight: bold; padding: 0.2cm;">Y</td>
+</tr>
+<tr class="even">
+<td style="text-align: center; border-bottom: 1px solid; font-style: italic; font-weight: normal;">Predictors</td>
+<td style="text-align: center; border-bottom: 1px solid; font-style: italic; font-weight: normal;">Odds Ratios</td>
+<td style="text-align: center; border-bottom: 1px solid; font-style: italic; font-weight: normal;">CI</td>
+<td style="text-align: center; border-bottom: 1px solid; font-style: italic; font-weight: normal;">p</td>
+<td style="text-align: center; border-bottom: 1px solid; font-style: italic; font-weight: normal;">Odds Ratios</td>
+<td style="text-align: center; border-bottom: 1px solid; font-style: italic; font-weight: normal;">CI</td>
+<td style="text-align: center;">p</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">(Intercept)</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">0.41</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">0.37&nbsp;–&nbsp;0.46</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;"><strong>&lt;0.001</strong></td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">0.49</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">0.44&nbsp;–&nbsp;0.54</td>
+<td style="text-align: center;"><strong>&lt;0.001</strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">A</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">1.48</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">1.24&nbsp;–&nbsp;1.76</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;"><strong>&lt;0.001</strong></td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">1.18</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">1.02&nbsp;–&nbsp;1.37</td>
+<td style="text-align: center;"><strong>0.029</strong></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left; padding: 0.2cm; vertical-align: top; padding-top: 0.1cm; padding-bottom: 0.1cm; border-top: 1px solid;">Observations</td>
+<td colspan="3" style="text-align: left; padding: 0.2cm; vertical-align: top; padding-top: 0.1cm; padding-bottom: 0.1cm; border-top: 1px solid;">2543</td>
+<td colspan="3" style="text-align: left; padding: 0.2cm; vertical-align: top; padding-top: 0.1cm; padding-bottom: 0.1cm; border-top: 1px solid;">3192</td>
+</tr>
+<tr class="even">
+<td style="text-align: left; padding: 0.2cm; vertical-align: top; padding-top: 0.1cm; padding-bottom: 0.1cm;">R<sup>2</sup> Tjur</td>
+<td colspan="3" style="text-align: left; padding: 0.2cm; vertical-align: top; padding-top: 0.1cm; padding-bottom: 0.1cm;">0.007</td>
+<td colspan="3" style="text-align: left; padding: 0.2cm; vertical-align: top; padding-top: 0.1cm; padding-bottom: 0.1cm;">0.003</td>
+</tr>
+</tbody>
+</table>
+
+
+</div>
+</div>
 <p><strong>Sensitivity analysis for unmeasured confounding</strong></p>
 <ul>
-<li>E-value, see online calculator https://www.evalue-calculator.com/</li>
-<li>You can calculate e-value in R as well using package Evalue, see https://louisahsmith.github.io/evalue/index.html</li>
+<li>E-value, see online calculator <a href="https://www.evalue-calculator.com/">https://www.evalue-calculator.com/</a></li>
+<li>You can calculate e-value in R as well using package Evalue, see <a href="https://louisahsmith.github.io/evalue/index.html">https://louisahsmith.github.io/evalue/index.html</a></li>
 </ul>
 
 
@@ -1199,8 +1374,20 @@ Austin, Peter C. 2007. <span>“Propensity-Score Matching in the Cardiovascular 
 <div id="ref-austin2021applying" class="csl-entry" role="listitem">
 Austin, Peter C, Amy Ying Xin Yu, Manav V Vyas, and Moira K Kapral. 2021. <span>“Applying Propensity Score Methods in Clinical Research in Neurology.”</span> <em>Neurology</em> 97 (18): 856–63.
 </div>
+<div id="ref-dong2020subgroup" class="csl-entry" role="listitem">
+Dong, Jing, Junni L Zhang, Shuxi Zeng, and Fan Li. 2020. <span>“Subgroup Balancing Propensity Score.”</span> <em>Statistical Methods in Medical Research</em> 29 (3): 659–76.
+</div>
+<div id="ref-eeren2015estimating" class="csl-entry" role="listitem">
+Eeren, Hester V, Marieke D Spreeuwenberg, Anna Bartak, Mark de Rooij, and Jan JV Busschbach. 2015. <span>“Estimating Subgroup Effects Using the Propensity Score Method: A Practical Application in Outcomes Research.”</span> <em>Medical Care</em> 53 (4): 366–73.
+</div>
 <div id="ref-karim2022use" class="csl-entry" role="listitem">
 Karim, Mohammad Ehsanul, Fabio Pellegrini, Robert W Platt, Gabrielle Simoneau, Julie Rouette, and Carl de Moor. 2022. <span>“The Use and Quality of Reporting of Propensity Score Methods in Multiple Sclerosis Literature: A Review.”</span> <em>Multiple Sclerosis Journal</em> 28 (9): 1317–23.
+</div>
+<div id="ref-wang2018relative" class="csl-entry" role="listitem">
+Wang, Shirley V, Yinzhu Jin, Bruce Fireman, Susan Gruber, Mengdong He, Richard Wyss, HoJin Shin, et al. 2018. <span>“Relative Performance of Propensity Score Matching Strategies for Subgroup Analyses.”</span> <em>American Journal of Epidemiology</em> 187 (8): 1799–1807.
+</div>
+<div id="ref-yang2021propensity" class="csl-entry" role="listitem">
+Yang, Siyun, Elizabeth Lorenzi, Georgia Papadogeorgou, Daniel M Wojdyla, Fan Li, and Laine E Thomas. 2021. <span>“Propensity Score Weighting for Causal Subgroup Analysis.”</span> <em>Statistics in Medicine</em> 40 (19): 4294–4309.
 </div>
 <div id="ref-yao2017reporting" class="csl-entry" role="listitem">
 Yao, Xiaoxin I, Xiaofei Wang, Paul J Speicher, E Shelley Hwang, Perry Cheng, David H Harpole, Mark F Berry, Deborah Schrag, and Herbert H Pang. 2017. <span>“Reporting and Guidelines in Propensity Score Analysis: A Systematic Review of Cancer and Cancer Surgical Studies.”</span> <em>JNCI: Journal of the National Cancer Institute</em> 109 (8): djw323.

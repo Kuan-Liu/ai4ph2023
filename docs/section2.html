@@ -22,6 +22,40 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -143,7 +177,22 @@ ul.task-list li input[type="checkbox"] {
 <div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#proposensity-score-analysis-using-machine-learning-technqiues" id="toc-proposensity-score-analysis-using-machine-learning-technqiues" class="nav-link active" data-scroll-target="#proposensity-score-analysis-using-machine-learning-technqiues">Proposensity score analysis using machine learning technqiues</a>
+  <ul class="collapse">
+  <li><a href="#super-machine-learning" id="toc-super-machine-learning" class="nav-link" data-scroll-target="#super-machine-learning">2.1 Super (Machine) Learning</a></li>
+  <li><a href="#using-machine-learning-methods-with-psa" id="toc-using-machine-learning-methods-with-psa" class="nav-link" data-scroll-target="#using-machine-learning-methods-with-psa">2.2 Using machine learning methods with PSA</a>
+  <ul class="collapse">
+  <li><a href="#ps-model-with-gradient-boosting" id="toc-ps-model-with-gradient-boosting" class="nav-link" data-scroll-target="#ps-model-with-gradient-boosting">2.2.1 PS model with gradient boosting</a></li>
+  <li><a href="#ps-model-with-super-learner" id="toc-ps-model-with-super-learner" class="nav-link" data-scroll-target="#ps-model-with-super-learner">2.2.2 PS model with Super Learner</a></li>
+  <li><a href="#ps-model-with-bayesian-additive-regression-trees" id="toc-ps-model-with-bayesian-additive-regression-trees" class="nav-link" data-scroll-target="#ps-model-with-bayesian-additive-regression-trees">2.2.3 PS model with Bayesian additive regression trees</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -188,13 +237,424 @@ Outlines
 </div>
 <div class="callout-body-container callout-body">
 <ul>
-<li>Propensity score methods machine learning techniques</li>
-<li>G-computation using machine learning techniques</li>
+<li>Propensity score methods machine learning techniques
+<ul>
+<li>gradient boosting machines</li>
+<li>super learner</li>
+<li>Bayesian additive regression trees</li>
+</ul></li>
 </ul>
 </div>
 </div>
+<section id="proposensity-score-analysis-using-machine-learning-technqiues" class="level1">
+<h1>Proposensity score analysis using machine learning technqiues</h1>
+<section id="super-machine-learning" class="level2">
+<h2 class="anchored" data-anchor-id="super-machine-learning">2.1 Super (Machine) Learning</h2>
+<ul>
+<li><p>Super learning can be used to obtain robust estimator. In a nut-shell it uses loss-function based ML tool and cross-validation to obtain the best prediction of model parameter of interest, based on a <strong>weighted average of a library of machine learning algorithms</strong>.</p></li>
+<li><p>Guide to SuperLearner by Chris Kennedy at <a href="https://cran.r-project.org/web/packages/SuperLearner/vignettes/Guide-to-SuperLearner.html">https://cran.r-project.org/web/packages/SuperLearner/vignettes/Guide-to-SuperLearner.html</a></p></li>
+<li><p>List of machine learning algorithms under SuperLearner R package</p></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(SuperLearner)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">listWrappers</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "SL.bartMachine"      "SL.bayesglm"         "SL.biglasso"        
+ [4] "SL.caret"            "SL.caret.rpart"      "SL.cforest"         
+ [7] "SL.earth"            "SL.extraTrees"       "SL.gam"             
+[10] "SL.gbm"              "SL.glm"              "SL.glm.interaction" 
+[13] "SL.glmnet"           "SL.ipredbagg"        "SL.kernelKnn"       
+[16] "SL.knn"              "SL.ksvm"             "SL.lda"             
+[19] "SL.leekasso"         "SL.lm"               "SL.loess"           
+[22] "SL.logreg"           "SL.mean"             "SL.nnet"            
+[25] "SL.nnls"             "SL.polymars"         "SL.qda"             
+[28] "SL.randomForest"     "SL.ranger"           "SL.ridge"           
+[31] "SL.rpart"            "SL.rpartPrune"       "SL.speedglm"        
+[34] "SL.speedlm"          "SL.step"             "SL.step.forward"    
+[37] "SL.step.interaction" "SL.stepAIC"          "SL.svm"             
+[40] "SL.template"         "SL.xgboost"         
+[1] "All"
+[1] "screen.corP"           "screen.corRank"        "screen.glmnet"        
+[4] "screen.randomForest"   "screen.SIS"            "screen.template"      
+[7] "screen.ttest"          "write.screen.template"</code></pre>
+</div>
+</div>
+</section>
+<section id="using-machine-learning-methods-with-psa" class="level2">
+<h2 class="anchored" data-anchor-id="using-machine-learning-methods-with-psa">2.2 Using machine learning methods with PSA</h2>
+<ul>
+<li>We can use ML to model our propensity score model</li>
+<li>The use of machine learning methods is more flexible than parametric methods (i.e., logistic regression)
+<ul>
+<li>Not without a cost, usually the more flexible the methods are the more one is at risk of overfitting; Too much noise considered in the modelling often results in poor coverage probability.</li>
+<li>There is no one approach that out performs others, thus which approach to use should be evaluated case by case.</li>
+<li>ML is generally suggested for large enough cohort and for modelling large set of covariates.</li>
+<li>It’s always suggested to include results from conventional logistic regression approach as a sensitivity analysis in comparison of ML approaches.</li>
+</ul></li>
+<li>Many approaches are included in the WeightIt package, <a href="https://ngreifer.github.io/WeightIt/reference/method_super.html">https://ngreifer.github.io/WeightIt/reference/method_super.html</a>
+<ul>
+<li>“gbm”, Propensity score weighting using generalized boosted modeling (also known as gradient boosting machines)</li>
+<li>“super”, Propensity score weighting using SuperLearner</li>
+<li>“bart”, Propensity score weighting using Bayesian additive regression trees (BART)
+<ul>
+<li>Bayesian Additive Regression Trees (BART) is a sum-of-trees model for approximating an unknown function. To avoid overfitting (of decision tree), BART uses a regularization prior that forces each tree to be able to explain only a limited subset of the relationships between the covariates and the predictor variable.</li>
+</ul></li>
+</ul></li>
+</ul>
+<p><strong>Setting up data and PS model formula</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">require</span>(tidyverse)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">require</span>(WeightIt)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>data2<span class="ot">&lt;-</span><span class="fu">readRDS</span>(<span class="st">"data/data2"</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>covariates <span class="ot">&lt;-</span> <span class="fu">select</span>(data2, <span class="sc">-</span><span class="fu">c</span>(id, A, Y))</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>baselines <span class="ot">&lt;-</span> <span class="fu">colnames</span>(covariates)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>ps.formula <span class="ot">&lt;-</span> <span class="fu">as.formula</span>(<span class="fu">paste</span>(<span class="st">"A~"</span>, </span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>                <span class="fu">paste</span>(baselines, <span class="at">collapse =</span> <span class="st">"+"</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="ps-model-with-gradient-boosting" class="level3">
+<h3 class="anchored" data-anchor-id="ps-model-with-gradient-boosting">2.2.1 PS model with gradient boosting</h3>
+<ul>
+<li>computationally more demanding and it might take several minutes to run.</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>IPTW_gbm <span class="ot">&lt;-</span> <span class="fu">weightit</span>(ps.formula,</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">data =</span> data2,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">method =</span> <span class="st">"gbm"</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">stabilize =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># saving the model output as a R object to avoid rerunning the same model;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(IPTW_gbm, <span class="at">file =</span> <span class="st">"data/IPTW_gbm"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># reading saved model output;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">require</span>(sjPlot)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>IPTW_gbm <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="at">file =</span> <span class="st">"data/IPTW_gbm"</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(IPTW_gbm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                 Summary of weights
+
+- Weight ranges:
+
+           Min                                   Max
+treated 0.3874 |---------------------------| 10.9875
+control 0.6227  |------------|                5.6764
+
+- Units with the 5 most extreme weights by group:
+                                            
+           5525   3148   4890   1825    5131
+ treated 4.0556 4.6873 5.1931 5.3152 10.9875
+            497   2046   3830   1602    1000
+ control 4.6689 4.8977  4.929 4.9313  5.6764
+
+- Weight statistics:
+
+        Coef of Var   MAD Entropy # Zeros
+treated       0.663 0.397   0.143       0
+control       0.426 0.262   0.067       0
+
+- Effective Sample Sizes:
+
+           Control Treated
+Unweighted 3551.   2184.  
+Weighted   3006.24 1517.47</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>fit2_gbm <span class="ot">&lt;-</span> <span class="fu">glm</span>(Y <span class="sc">~</span> A, </span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>            <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">weights =</span> IPTW_gbm<span class="sc">$</span>weights,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">data =</span> data2)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">tab_model</span>(fit2_gbm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table data-quarto-postprocess="true" class="table table-sm table-striped small">
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" style="text-align: center; border-top: double; font-style: normal; font-weight: bold; padding: 0.2cm;">&nbsp;</td>
+<td colspan="3" data-quarto-table-cell-role="th" style="text-align: center; border-top: double; font-style: normal; font-weight: bold; padding: 0.2cm;">Y</td>
+</tr>
+<tr class="even">
+<td style="text-align: center; border-bottom: 1px solid; font-style: italic; font-weight: normal;">Predictors</td>
+<td style="text-align: center; border-bottom: 1px solid; font-style: italic; font-weight: normal;">Odds Ratios</td>
+<td style="text-align: center; border-bottom: 1px solid; font-style: italic; font-weight: normal;">CI</td>
+<td style="text-align: center; border-bottom: 1px solid; font-style: italic; font-weight: normal;">p</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">(Intercept)</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">0.46</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">0.42&nbsp;–&nbsp;0.49</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;"><strong>&lt;0.001</strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">A</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">1.27</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">1.12&nbsp;–&nbsp;1.43</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;"><strong>&lt;0.001</strong></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left; padding: 0.2cm; vertical-align: top; padding-top: 0.1cm; padding-bottom: 0.1cm; border-top: 1px solid;">Observations</td>
+<td colspan="3" style="text-align: left; padding: 0.2cm; vertical-align: top; padding-top: 0.1cm; padding-bottom: 0.1cm; border-top: 1px solid;">5735</td>
+</tr>
+<tr class="even">
+<td style="text-align: left; padding: 0.2cm; vertical-align: top; padding-top: 0.1cm; padding-bottom: 0.1cm;">R<sup>2</sup> Tjur</td>
+<td colspan="3" style="text-align: left; padding: 0.2cm; vertical-align: top; padding-top: 0.1cm; padding-bottom: 0.1cm;">0.004</td>
+</tr>
+</tbody>
+</table>
 
 
+</div>
+</div>
+</section>
+<section id="ps-model-with-super-learner" class="level3">
+<h3 class="anchored" data-anchor-id="ps-model-with-super-learner">2.2.2 PS model with Super Learner</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>IPTW_SL <span class="ot">&lt;-</span> <span class="fu">weightit</span>(ps.formula,</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">data =</span> data2,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">method =</span> <span class="st">"super"</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">SL.library=</span><span class="fu">c</span>(<span class="st">"SL.randomForest"</span>, <span class="st">"SL.glmnet"</span>, <span class="st">"SL.nnet"</span>), </span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">stabilize =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co"># saving the model output as a R object to avoid rerunning the same model;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(IPTW_SL, <span class="at">file =</span> <span class="st">"data/IPTW_SL"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># reading saved model output;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>IPTW_SL <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="at">file =</span> <span class="st">"data/IPTW_SL"</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(IPTW_SL)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                 Summary of weights
+
+- Weight ranges:
+
+           Min                                  Max
+treated 0.4008 |-----------------|           1.0346
+control 0.6254        |--------------------| 1.4140
+
+- Units with the 5 most extreme weights by group:
+                                           
+            742   5131   3508   1825   4890
+ treated 0.9223 0.9489  0.968 0.9808 1.0346
+           3391   3216   2174   2986    505
+ control 1.3373 1.3461 1.3533 1.3627  1.414
+
+- Weight statistics:
+
+        Coef of Var   MAD Entropy # Zeros
+treated       0.184 0.147   0.016       0
+control       0.159 0.125   0.012       0
+
+- Effective Sample Sizes:
+
+           Control Treated
+Unweighted 3551.    2184. 
+Weighted   3463.76  2112.6</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>fit2_SL <span class="ot">&lt;-</span> <span class="fu">glm</span>(Y <span class="sc">~</span> A, </span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>            <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">weights =</span> IPTW_SL<span class="sc">$</span>weights,</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">data =</span> data2)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">tab_model</span>(fit2_SL)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table data-quarto-postprocess="true" class="table table-sm table-striped small">
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" style="text-align: center; border-top: double; font-style: normal; font-weight: bold; padding: 0.2cm;">&nbsp;</td>
+<td colspan="3" data-quarto-table-cell-role="th" style="text-align: center; border-top: double; font-style: normal; font-weight: bold; padding: 0.2cm;">Y</td>
+</tr>
+<tr class="even">
+<td style="text-align: center; border-bottom: 1px solid; font-style: italic; font-weight: normal;">Predictors</td>
+<td style="text-align: center; border-bottom: 1px solid; font-style: italic; font-weight: normal;">Odds Ratios</td>
+<td style="text-align: center; border-bottom: 1px solid; font-style: italic; font-weight: normal;">CI</td>
+<td style="text-align: center; border-bottom: 1px solid; font-style: italic; font-weight: normal;">p</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">(Intercept)</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">0.45</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">0.41&nbsp;–&nbsp;0.48</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;"><strong>&lt;0.001</strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">A</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">1.35</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">1.17&nbsp;–&nbsp;1.56</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;"><strong>&lt;0.001</strong></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left; padding: 0.2cm; vertical-align: top; padding-top: 0.1cm; padding-bottom: 0.1cm; border-top: 1px solid;">Observations</td>
+<td colspan="3" style="text-align: left; padding: 0.2cm; vertical-align: top; padding-top: 0.1cm; padding-bottom: 0.1cm; border-top: 1px solid;">5735</td>
+</tr>
+<tr class="even">
+<td style="text-align: left; padding: 0.2cm; vertical-align: top; padding-top: 0.1cm; padding-bottom: 0.1cm;">R<sup>2</sup> Tjur</td>
+<td colspan="3" style="text-align: left; padding: 0.2cm; vertical-align: top; padding-top: 0.1cm; padding-bottom: 0.1cm;">0.005</td>
+</tr>
+</tbody>
+</table>
+
+
+</div>
+</div>
+</section>
+<section id="ps-model-with-bayesian-additive-regression-trees" class="level3">
+<h3 class="anchored" data-anchor-id="ps-model-with-bayesian-additive-regression-trees">2.2.3 PS model with Bayesian additive regression trees</h3>
+<ul>
+<li>A much faster algorithm comparing to gbm and SL.</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>IPTW_bart <span class="ot">&lt;-</span> <span class="fu">weightit</span>(ps.formula,</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">data =</span> data2,</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">method =</span> <span class="st">"bart"</span>,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">stabilize =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co"># saving the model output as a R object to avoid rerunning the same model;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(IPTW_bart, <span class="at">file =</span> <span class="st">"data/IPTW_bart"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># reading saved model output;</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>IPTW_bart <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="at">file =</span> <span class="st">"data/IPTW_bart"</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(IPTW_bart)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                 Summary of weights
+
+- Weight ranges:
+
+           Min                                   Max
+treated 0.3861 |---------------------------| 13.8560
+control 0.6211 |------------------|           9.8333
+
+- Units with the 5 most extreme weights by group:
+                                             
+           3148   4119    1825    5131   4890
+ treated 8.7361 9.5095 11.8258 12.7766 13.856
+             84   1810    3839    1000    505
+ control 6.7109 6.7279  7.9066  7.9218 9.8333
+
+- Weight statistics:
+
+        Coef of Var   MAD Entropy # Zeros
+treated       0.926 0.471   0.226       0
+control       0.544 0.308   0.096       0
+
+- Effective Sample Sizes:
+
+           Control Treated
+Unweighted 3551.   2184.  
+Weighted   2740.56 1175.59</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>fit2_bart <span class="ot">&lt;-</span> <span class="fu">glm</span>(Y <span class="sc">~</span> A, </span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>            <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">weights =</span> IPTW_bart<span class="sc">$</span>weights,</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">data =</span> data2)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="fu">tab_model</span>(fit2_bart)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table data-quarto-postprocess="true" class="table table-sm table-striped small">
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th" style="text-align: center; border-top: double; font-style: normal; font-weight: bold; padding: 0.2cm;">&nbsp;</td>
+<td colspan="3" data-quarto-table-cell-role="th" style="text-align: center; border-top: double; font-style: normal; font-weight: bold; padding: 0.2cm;">Y</td>
+</tr>
+<tr class="even">
+<td style="text-align: center; border-bottom: 1px solid; font-style: italic; font-weight: normal;">Predictors</td>
+<td style="text-align: center; border-bottom: 1px solid; font-style: italic; font-weight: normal;">Odds Ratios</td>
+<td style="text-align: center; border-bottom: 1px solid; font-style: italic; font-weight: normal;">CI</td>
+<td style="text-align: center; border-bottom: 1px solid; font-style: italic; font-weight: normal;">p</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">(Intercept)</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">0.45</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">0.42&nbsp;–&nbsp;0.48</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;"><strong>&lt;0.001</strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">A</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">1.30</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">1.16&nbsp;–&nbsp;1.46</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;"><strong>&lt;0.001</strong></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left; padding: 0.2cm; vertical-align: top; padding-top: 0.1cm; padding-bottom: 0.1cm; border-top: 1px solid;">Observations</td>
+<td colspan="3" style="text-align: left; padding: 0.2cm; vertical-align: top; padding-top: 0.1cm; padding-bottom: 0.1cm; border-top: 1px solid;">5735</td>
+</tr>
+<tr class="even">
+<td style="text-align: left; padding: 0.2cm; vertical-align: top; padding-top: 0.1cm; padding-bottom: 0.1cm;">R<sup>2</sup> Tjur</td>
+<td colspan="3" style="text-align: left; padding: 0.2cm; vertical-align: top; padding-top: 0.1cm; padding-bottom: 0.1cm;">0.005</td>
+</tr>
+</tbody>
+</table>
+
+
+</div>
+</div>
+<blockquote class="blockquote">
+<p>Comparing the three approaches given the rhc data, it appears that SuperLearner returns good stable weights (no visible extreme weights). This indicates a great fit of the PS model.</p>
+</blockquote>
+<ul>
+<li>Similar as before, we can check for PS distribution and balancing. Additionally, we can perform subgroup and sensitivity analysis as mentioned before.</li>
+</ul>
+<p><strong>Forest plot to display results from different approaches</strong></p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>plotdata <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="fu">c</span>(<span class="st">"PS-match"</span>, <span class="st">"PS-IPTW"</span>, <span class="st">"PS-IPTW-Trim"</span>, <span class="st">"PS-IPTW-gbm"</span>, <span class="st">"PS-IPTW-SL"</span>, <span class="st">"PS-IPTW-bart"</span>),  </span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">est.OR =</span> <span class="fu">c</span>(<span class="fl">1.23</span>, <span class="fl">1.30</span>, <span class="fl">1.34</span>, <span class="fl">1.27</span>, <span class="fl">1.35</span>, <span class="fl">1.30</span>),</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">conf.low =</span> <span class="fu">c</span>(<span class="fl">1.12</span>, <span class="fl">1.16</span>, <span class="fl">1.19</span>, <span class="fl">1.12</span>, <span class="fl">1.17</span>, <span class="fl">1.16</span>),</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">conf.high =</span> <span class="fu">c</span>(<span class="fl">1.36</span>, <span class="fl">1.45</span>, <span class="fl">1.50</span>, <span class="fl">1.43</span>, <span class="fl">1.56</span>, <span class="fl">1.46</span>))</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> </span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  plotdata <span class="sc">|&gt;</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">fct_rev</span>(method))) <span class="sc">+</span> </span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>() <span class="sc">+</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">x=</span>est.OR), <span class="at">shape=</span><span class="dv">15</span>, <span class="at">size=</span><span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_linerange</span>(<span class="fu">aes</span>(<span class="at">xmin=</span>conf.low, <span class="at">xmax=</span>conf.high)) <span class="sc">+</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">1</span>, <span class="at">linetype=</span><span class="st">"dashed"</span>) <span class="sc">+</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x=</span><span class="st">"Odds Ratio"</span>, <span class="at">y=</span><span class="st">""</span>) <span class="sc">+</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="at">ylim=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">7</span>), <span class="at">xlim=</span><span class="fu">c</span>(<span class="fl">0.7</span>, <span class="dv">2</span>)) <span class="sc">+</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="st">"text"</span>, <span class="at">x =</span> <span class="fl">0.8</span>, <span class="at">y =</span> <span class="dv">7</span>, <span class="at">label =</span> <span class="st">"RHC protective"</span>) <span class="sc">+</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="st">"text"</span>, <span class="at">x =</span> <span class="fl">1.2</span>, <span class="at">y =</span> <span class="dv">7</span>, <span class="at">label =</span> <span class="st">"RHC harmful"</span>) <span class="sc">+</span> </span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.line.y =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.ticks.y=</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.text.y=</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>        <span class="at">axis.title.y=</span> <span class="fu">element_blank</span>())</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>plotdata_OR <span class="ot">&lt;-</span> plotdata <span class="sc">|&gt;</span></span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>  <span class="co"># round estimates and 95% CIs to 2 decimal places for journal specifications</span></span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">estimate_label =</span> <span class="fu">paste0</span>(est.OR, <span class="st">" ("</span>, conf.low, <span class="st">"-"</span>, conf.high, <span class="st">")"</span>))  <span class="sc">|&gt;</span></span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>  <span class="co"># add a row of data to be shown on the forest plot as column names;</span></span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(</span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>    <span class="fu">data.frame</span>(</span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> <span class="st">"Method"</span>,</span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a>      <span class="at">estimate_label =</span> <span class="st">"Odds Ratio (95% CI)"</span></span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">method =</span> <span class="fu">fct_rev</span>(<span class="fu">fct_relevel</span>(method, <span class="st">"Method"</span>)))</span>
+<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-36"><a href="#cb16-36" aria-hidden="true" tabindex="-1"></a>p_left <span class="ot">&lt;-</span></span>
+<span id="cb16-37"><a href="#cb16-37" aria-hidden="true" tabindex="-1"></a>  plotdata_OR  <span class="sc">|&gt;</span></span>
+<span id="cb16-38"><a href="#cb16-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">y =</span> method)) <span class="sc">+</span></span>
+<span id="cb16-39"><a href="#cb16-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="dv">0</span>, <span class="at">label =</span> method), <span class="at">hjust =</span> <span class="dv">0</span>, <span class="at">fontface =</span> <span class="st">"bold"</span>)<span class="sc">+</span></span>
+<span id="cb16-40"><a href="#cb16-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(</span>
+<span id="cb16-41"><a href="#cb16-41" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">x =</span> <span class="dv">2</span>, <span class="at">label =</span> estimate_label),</span>
+<span id="cb16-42"><a href="#cb16-42" aria-hidden="true" tabindex="-1"></a>    <span class="at">hjust =</span> <span class="dv">0</span>,</span>
+<span id="cb16-43"><a href="#cb16-43" aria-hidden="true" tabindex="-1"></a>    <span class="at">fontface =</span> <span class="fu">ifelse</span>(plotdata_OR<span class="sc">$</span>estimate_label <span class="sc">==</span> <span class="st">"Odds Ratio (95% CI)"</span>, <span class="st">"bold"</span>, <span class="st">"plain"</span>)</span>
+<span id="cb16-44"><a href="#cb16-44" aria-hidden="true" tabindex="-1"></a>  )<span class="sc">+</span></span>
+<span id="cb16-45"><a href="#cb16-45" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>() <span class="sc">+</span></span>
+<span id="cb16-46"><a href="#cb16-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="at">xlim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">4</span>))</span>
+<span id="cb16-47"><a href="#cb16-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-48"><a href="#cb16-48" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span>
+<span id="cb16-49"><a href="#cb16-49" aria-hidden="true" tabindex="-1"></a>layout <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb16-50"><a href="#cb16-50" aria-hidden="true" tabindex="-1"></a>  <span class="fu">area</span>(<span class="at">t =</span> <span class="dv">0</span>, <span class="at">l =</span> <span class="dv">0</span>, <span class="at">b =</span> <span class="dv">15</span>, <span class="at">r =</span> <span class="dv">4</span>), <span class="co"># left plot, starts at the top of the page (0) and goes 30 units down and 3 units to the right</span></span>
+<span id="cb16-51"><a href="#cb16-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">area</span>(<span class="at">t =</span> <span class="dv">1</span>, <span class="at">l =</span> <span class="dv">5</span>, <span class="at">b =</span> <span class="dv">15</span>, <span class="at">r =</span> <span class="dv">9</span>) <span class="co"># middle plot starts a little lower (t=1) because there's no title. starts 1 unit right of the left plot (l=4, whereas left plot is r=3), goes to the bottom of the page (30 units), and 6 units further over from the left plot (r=9 whereas left plot is r=3)</span></span>
+<span id="cb16-52"><a href="#cb16-52" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb16-53"><a href="#cb16-53" aria-hidden="true" tabindex="-1"></a><span class="co"># final plot arrangement</span></span>
+<span id="cb16-54"><a href="#cb16-54" aria-hidden="true" tabindex="-1"></a>p_left <span class="sc">+</span> p <span class="sc">+</span><span class="fu">plot_layout</span>(<span class="at">design =</span> layout)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="section2_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="864"></p>
+</figure>
+</div>
+</div>
+</div>
+
+
+</section>
+</section>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
