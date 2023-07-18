@@ -25,7 +25,7 @@ By the end of this session, participants should be able to perform causal analys
 
 -  Introduction
 -  [Section 1: Conventional causal approaches](section1.qmd)
--  [Section 1: Machine learning causal approaches](section2.qmd)
+-  [Section 2: Machine learning causal approaches](section2.qmd)
 -  Hands-on practice replicating tutorial examples (15-20 mins)
 
 
