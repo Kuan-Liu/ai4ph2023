@@ -1,0 +1,433 @@
+---
+title: "Propensity Score Analysis Tutorial"
+bibliography: book.bib
+author: "Kuan Liu"
+subtitle: "HAD 7002H Causal Inference Spring/Summer 2024"
+format: 
+  html: 
+    code-block-bg: true
+    self-contained: true
+---
+
+# Dataset - The Right Heart Catheterization
+
+For this tutorial, we will be using the same right heart catheterization (RHC) dataset. The original JAMA paper [@connors1996effectiveness] and the data csv file will be posted on Quercues.
+
+
+## Data import and processing
+
+```{r echo=TRUE, warning=FALSE, message=FALSE}
+library(tidyverse)
+data <- read.csv("data/rhc.csv", header=T)
+
+# define exposure variable
+data$A <- ifelse(data$swang1 =="No RHC", 0, 1)
+
+# outcome is dth30, a binary outcome measuring survival status at day 30;
+data$Y <- ifelse(data$dth30 =="No", 0, 1)
+```
+
+## Data visualization on missing values
+
+```{r echo=TRUE, warning=FALSE, message=FALSE, fig.align='center', fig.height=9}
+library(naniar)
+gg_miss_var(data, facet=A, show_pct = TRUE)
+# try changing facet to dth30, this examines missingness by outcome;
+```
+
+## Finalizing dataset for causal analysis
+
+```{r echo=TRUE, warning=FALSE, message=FALSE, fig.align='center', fig.height=9}
+# we create our analysis data by removing variables with large proportion of missing;
+# and variables not used in the analysis;
+data2 <- select(data, -c(cat2, adld3p, urin1, swang1,
+                         sadmdte, dschdte, dthdte, lstctdte, death, dth30,
+                         surv2md1, das2d3pc, t3d30, ptid)) 
+data2 <- rename(data2, id = X)
+
+# display data on Quarto page;
+library(DT)
+data2 %>% datatable(
+  rownames = FALSE,
+  options = list(
+    columnDefs = list(list(className = 'dt-center', 
+                      targets = 0:4))))
+
+# verify data structure;
+str(data2)
+```
+
+
+## 0. Summary statistics of baseline variables by treatment status
+
+```{r echo=TRUE, warning=FALSE, message=FALSE}
+library(tableone)
+covariates <- select(data2, -c(id, A, Y))
+baselines <- colnames(covariates)
+baselines
+
+tab0 <- CreateTableOne(vars = baselines,
+                       data = data2, 
+                       strata = "A", 
+                       test = FALSE, #mute P-value calculation;
+                       smd = TRUE,
+                       addOverall = TRUE)
+print(tab0, smd = TRUE, showAllLevels = FALSE)
+```
+
+## 0.1 Naive regression analysis
+
+```{r echo=TRUE, warning=FALSE, message=FALSE}
+library(sjPlot)
+# adjust the treatment variable & baseline variables;
+fit0.Y.formula <- as.formula(paste("Y ~ A +", 
+                               paste(baselines, 
+                                     collapse = "+")))
+fit0 <- glm(fit0.Y.formula, family = "binomial", data = data2)
+tab_model(fit0)
+```
+
+##  1 Propensity score analysis
+
+### 1.1 Propensity score matching
+
+
+```{r echo=TRUE, warning=FALSE, message=FALSE}
+library(MatchIt)
+
+set.seed(123) #this approach requires setting seed values to reproduce the same results;
+
+ps.formula <- as.formula(paste("A~", 
+                paste(baselines, collapse = "+")))
+
+PS.fit <- glm(ps.formula,family="binomial", data=data2)
+
+#adding calculated PS values back to the dataset;
+data2$PS <- predict(PS.fit, newdata = data2, type="response") 
+
+# we can select variables caliper to ensure large/representable matched pairs are selected;
+# caliper can take values between 0.05 (a tight match) to 0.2 (a loose match);
+
+match.obj <- matchit(ps.formula, data =data2,
+                     distance = data2$PS,
+                     method = "nearest", #nearest neighbour;
+                     replace=FALSE,
+                     ratio = 1, #1:1 match;
+                     caliper = .15)
+```
+
+
+**Checking PS distributions and balance**
+
+```{r echo=TRUE, warning=FALSE, message=FALSE, fig.align='center'}
+library(cobalt)
+bal.plot(match.obj,
+         var.name="distance",
+         which="both",
+         type = "density",
+         colors = c("red","blue"))
+```
+
+```{r echo=TRUE, warning=FALSE, message=FALSE, fig.align='center', fig.height=9}
+love.plot(match.obj, 
+          binary = "std", 
+          grid = TRUE,
+          thresholds = c(m = .1),
+          colors = c("red","blue"))  
+```
+
+**Outcome regression post-matching**
+
+```{r echo=TRUE, warning=FALSE, message=FALSE, fig.align='center', fig.height=9}
+library(geepack)
+Match <- match.data(match.obj)
+fit1 <- geeglm(Y ~ A, family=binomial("logit"), 
+              data=Match,
+              weights=weights, 
+              std.err = 'san.se', 
+              id=subclass, 
+              corstr="independence") 
+sjPlot::tab_model(fit1)
+```
+
+
+### 1.2 Propensity score weighting
+
+**Obtaining weights using WeightIt package**
+
+```{r echo=TRUE, warning=FALSE, message=FALSE}
+library(WeightIt)
+IPTW <- weightit(ps.formula,
+                 data = data2,
+                 method = "glm", #using the default logistic regression;
+                 stabilize = TRUE)
+
+IPTW
+summary(IPTW)
+```
+
+**Checking PS distributions and balance**
+
+```{r echo=TRUE, warning=FALSE, message=FALSE, fig.align='center'}
+bal.plot(IPTW,
+         which="both",
+         type = "density",
+         colors = c("red","blue"))
+
+bal.tab(IPTW, un=TRUE, thresholds = c(m=0.1))
+```
+
+```{r echo=TRUE, warning=FALSE, message=FALSE, fig.align='center', fig.height=9}
+love.plot(IPTW, 
+          binary = "std", 
+          grid = TRUE,
+          thresholds = c(m = .1),
+          colors = c("red","blue"))  
+```
+
+**Outcome modelling**
+
+```{r echo=TRUE, warning=FALSE, message=FALSE}
+library(survey)
+
+dweight<-svydesign(id=~1,weights=~IPTW$weights, data=data2)
+fit2 <- svyglm(Y ~ A, 
+            family = binomial(link="logit"),
+            design = dweight)
+  
+fit2.1 <- glm(Y ~ A, 
+            family = "binomial",
+            weights = IPTW$weights,
+            data = data2)
+
+
+#trim weights;
+#Trimming at 99th percentile
+IPTW.trim <- trim(IPTW, at = .99)
+dweight2<-svydesign(id=~1,weights=~IPTW.trim$weights, data=data2)
+fit2.trim <- svyglm(Y ~ A, 
+            family = binomial(link="logit"),
+            design = dweight2)
+
+tab_model(fit2, fit2.1, fit2.trim)
+```
+
+
+## 1.3 General guildelines on implementing PSA
+
+Here providing a list a references that covers guildelines are PSA analysis and its reporting
+
+1.  PS matching [@austin2007propensity]
+2.  PSA analysis for cancer research [@yao2017reporting]
+3.  PSA analysis for neurology [@austin2021applying]
+4.  PSA analysis for multiple sclerosis [@karim2022use]
+    
+### Checklist for the design and analysis of studies using PS methods 
+[@austin2021applying]
+    
+```{r echo = FALSE, out.width="100%"}
+knitr::include_graphics("image/F1.large.jpg")
+```
+ 
+    
+    
+### Checklist for reporting of studies using PS methods 
+[@austin2021applying]
+    
+```{r echo = FALSE, out.width="100%"}
+knitr::include_graphics("image/F2.large.jpg")
+```
+ 
+
+## 2 Propensity score analysis with clustered data
+
+### 2.1 Matching
+
+```{r echo=TRUE, warning=FALSE, message=FALSE}
+library(lme4)
+library(optimx)
+library(Matching)
+
+data2$cluster <- sample(1:10, size = dim(data2)[1], replace = TRUE)
+
+ps.formula_fix <- as.formula(paste("A~", 
+                paste(baselines, collapse = "+"), "+cluster"))
+
+ps.formula_random <- as.formula(paste("A~", 
+                paste(baselines, collapse = "+"),"+(1|cluster)"))
+
+PS.fit_fix <- glm(ps.formula_fix,family="binomial", data=data2)
+PS.fit_random <- glmer(ps.formula_random,family="binomial", 
+                       control = lme4::glmerControl(optimizer = "optimx", 
+                                                    calc.derivs = FALSE, 
+                                                    optCtrl = list(method = "nlminb",
+                                                                   starttests = FALSE, 
+                                                                   kkt = FALSE)),
+                       data=data2)
+
+#adding calculated PS values back to the dataset;
+data2$PS_fix <- predict(PS.fit_fix, newdata = data2, type="response") 
+data2$PS_random <- predict(PS.fit_random, newdata = data2, type="response") 
+
+
+# match with-in cluster;
+PS  <- data2$PS
+PS_fix  <- data2$PS_fix
+PS_random  <- data2$PS_random
+Y  <- data2$Y
+Tr <- data2$A
+
+# 1:1 matching;
+rr1  <- Matchby(Y=Y, Tr=Tr, X=PS,caliper=0.15,replace = FALSE, ties=FALSE, by=data2$cluster, estimand = "ATE",M=1);
+matched1 <- data2[c(rr1$index.treated, rr1$index.control),]
+matched1$pair <- factor(rep(rr1$index.treated, 2))
+fitc <- geeglm(Y ~ A, family=binomial("log"),
+              data=matched1,
+              weights=(1/matched1$PS),
+              std.err = 'san.se',
+              id=pair,
+              corstr="independence")
+
+rr2  <- Matchby(Y=Y, Tr=Tr, X=PS_fix, caliper=0.15,replace = FALSE, ties=FALSE, by=data2$cluster,estimand = "ATE", M=1);
+matched2 <- data2[c(rr2$index.treated, rr2$index.control),]
+matched2$pair <- factor(rep(rr2$index.treated, 2))
+fitc_fix <- geeglm(Y ~ A, family=binomial("log"),
+              data=matched2,
+              weights=(1/matched2$PS_fix),
+              std.err = 'san.se',
+              id=pair,
+              corstr="independence")
+
+rr3  <- Matchby(Y=Y, Tr=Tr, X=PS_random, caliper=0.15,replace = FALSE, ties=FALSE, by=data2$cluster, estimand = "ATE",M=1);
+matched3 <- data2[c(rr3$index.treated, rr3$index.control),]
+matched3$pair <- factor(rep(rr3$index.treated, 2))
+fitc_random <- geeglm(Y ~ A, family=binomial("log"),
+              data=matched3,
+              weights=(1/matched3$PS_random),
+              std.err = 'san.se',
+              id=pair,
+              corstr="independence") 
+
+sjPlot::tab_model(fitc, fitc_fix, fitc_random)
+
+# match across cluster;
+rr4  <- Match(Y=Y, Tr=Tr, X=PS,caliper=0.15,replace = FALSE, ties=FALSE, estimand = "ATE", M=1);
+matched4 <- data2[c(rr4$index.treated, rr4$index.control),]
+matched4$pair <- factor(rep(rr4$index.treated, 2))
+fita <- geeglm(Y ~ A, family=binomial("log"),
+              data=matched4,
+              weights=(1/matched4$PS),
+              std.err = 'san.se',
+              id=pair,
+              corstr="independence")
+
+rr5  <- Match(Y=Y, Tr=Tr, X=PS_fix,caliper=0.15,replace = FALSE, ties=FALSE,  estimand = "ATE", M=1);
+matched5 <- data2[c(rr5$index.treated, rr5$index.control),]
+matched5$pair <- factor(rep(rr5$index.treated, 2))
+fita_fix <- geeglm(Y ~ A, family=binomial("log"),
+              data=matched5,
+              weights=(1/matched5$PS_fix),
+              std.err = 'san.se',
+              id=pair,
+              corstr="independence")
+
+rr6  <- Match(Y=Y, Tr=Tr, X=PS_random,caliper=0.15,replace = FALSE, ties=FALSE, estimand = "ATE", M=1);
+matched6 <- data2[c(rr6$index.treated, rr6$index.control),]
+matched6$pair <- factor(rep(rr6$index.treated, 2))
+fita_random <- geeglm(Y ~ A, family=binomial("log"),
+              data=matched6,
+              weights=(1/matched6$PS_random),
+              std.err = 'san.se',
+              id=pair,
+              corstr="independence")
+
+sjPlot::tab_model(fita, fita_fix, fita_random)
+
+```
+
+### 2.2 Weighting with cluster
+
+-   Single-level ATE estimation with PS weighting
+    1.  estimate PS with cluster adjustment
+    2.  estimate ATE using weighted regression using model estimated PS from step 1;
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+wfix <- (1/data2$PS_fix)
+wrandom <- (1/data2$PS_random)
+dfix<-svydesign(id=~1,weights=~wfix, data=data2)
+drandom<-svydesign(id=~1,weights=~wrandom, data=data2)
+
+fitw_fix <- svyglm(Y ~ A, 
+            family = binomial(link="logit"),
+            design = dfix)
+fitw_random <- svyglm(Y ~ A, 
+            family = binomial(link="logit"),
+            design = drandom)
+sjPlot::tab_model(fitw_fix, fitw_random)
+```
+
+-   Pooled ATE for Fixed effect model is provided below;
+
+    1.  Estimate cluster-specific treatment effect and se
+    2.  Pool cluster-specific treatment effect via meta anaylsis
+
+```{r echo=TRUE, message=FALSE, warning=FALSE, fig.align='center'}
+TE <- rep(NA,10)
+wTE <- rep(NA,10)
+
+for (i in 1:10){
+
+# Step 1: cluster specific treatment effect;  
+data2_sub <- subset(data2,cluster==i)
+
+fit <- glm(Y ~ A, 
+            family = "binomial",
+            weights = (1/data2_sub$PS_fix),
+            data = data2_sub)
+
+TE[i]<-exp(coef(fit)[2])
+wTE[i] <- sum(1/data2_sub$PS_fix)
+}
+
+# Step 2: pool over clusters by cluster weights;
+ATE_CL = sum(TE*wTE)/sum(wTE)
+ATE_CL
+
+boot.est<-rep(NA, 10)
+set.seed(123)
+for (i in 1:10) {
+  
+  # Sample clusters with replacement;
+  sampled_clusters <- sample(unique(data2$cluster), replace = TRUE)
+  
+  # Get all observations from the sampled clusters;
+  bootstrap_data <- data2 %>% filter(cluster %in% sampled_clusters)
+  
+  TE <- rep(NA,length(unique(sampled_clusters)))
+  wTE <- rep(NA,length(unique(sampled_clusters)))
+
+  for (j in 1:length(unique(sampled_clusters))){
+
+        bootstrap_data_sub <- subset(bootstrap_data,cluster==unique(sampled_clusters)[j])
+        
+        fit <- glm(Y ~ A, 
+                    family = "binomial",
+                    weights = (1/bootstrap_data_sub$PS_fix),
+                    data = bootstrap_data_sub)
+        
+        TE[j]<-exp(coef(fit)[2])
+        wTE[j] <- sum(1/bootstrap_data_sub$PS_fix)
+        }
+        
+    boot.est[i] <- sum(TE*wTE)/sum(wTE)
+}
+
+seATE_CL = sd(boot.est)
+
+#95% CI;
+c(ATE_CL-1.96*seATE_CL, ATE_CL+1.96*seATE_CL)
+```
+
+    
+    
+    
