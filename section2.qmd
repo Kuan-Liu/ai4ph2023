@@ -84,9 +84,9 @@ require(sjPlot)
 IPTW_gbm <- readRDS(file = "data/IPTW_gbm")
 summary(IPTW_gbm)
 
-fit2_gbm <- glm(Y ~ A, 
+fit2_gbm <- glm_weightit(Y ~ A, 
             family = "binomial",
-            weights = IPTW_gbm$weights,
+            weightit = IPTW_gbm,
             data = data2)
 tab_model(fit2_gbm)
 ```
@@ -108,9 +108,9 @@ saveRDS(IPTW_SL, file = "data/IPTW_SL")
 IPTW_SL <- readRDS(file = "data/IPTW_SL")
 summary(IPTW_SL)
 
-fit2_SL <- glm(Y ~ A, 
+fit2_SL <- glm_weightit(Y ~ A, 
             family = "binomial",
-            weights = IPTW_SL$weights,
+            weightit = IPTW_SL,
             data = data2)
 tab_model(fit2_SL)
 ```
@@ -134,9 +134,9 @@ saveRDS(IPTW_bart, file = "data/IPTW_bart")
 IPTW_bart <- readRDS(file = "data/IPTW_bart")
 summary(IPTW_bart)
 
-fit2_bart <- glm(Y ~ A, 
+fit2_bart <- glm_weightit(Y ~ A, 
             family = "binomial",
-            weights = IPTW_bart$weights,
+            weightit = IPTW_bart,
             data = data2)
 tab_model(fit2_bart)
 ```
@@ -151,10 +151,10 @@ tab_model(fit2_bart)
 
 ```{r echo=TRUE, warning=FALSE, message=FALSE, fig.align='center', fig.width=9}
 plotdata <- data.frame(
-  method = c("Naive-Reg","PS-match", "PS-IPTW", "PS-IPTW-Trim", "PS-IPTW-gbm", "PS-IPTW-SL", "PS-IPTW-bart"),  
-  est.OR = c(1.42, 1.23, 1.30, 1.34, 1.27, 1.35, 1.30),
-  conf.low = c(1.23, 1.12, 1.16, 1.19, 1.12, 1.17, 1.16),
-  conf.high = c(1.64, 1.36, 1.45, 1.50, 1.43, 1.56, 1.46))
+  method = c("Naive-Reg","PS-match", "PS-IPTW", "PS-IPTW-gbm", "PS-IPTW-SL", "PS-IPTW-bart"),  
+  est.OR = c(1.42, 1.23, 1.30, 1.27, 1.35, 1.30),
+  conf.low = c(1.23, 1.12, 1.14, 1.11, 1.21, 1.13),
+  conf.high = c(1.64, 1.36, 1.48, 1.44, 1.51, 1.50))
 
 p <- 
   plotdata |>

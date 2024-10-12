@@ -63,16 +63,12 @@ set.seed(123) #this approach requires setting seed values to reproduce the same 
 ps.formula <- as.formula(paste("A~", 
                 paste(baselines, collapse = "+")))
 
-PS.fit <- glm(ps.formula,family="binomial", data=data2)
-
-#adding calculated PS values back to the dataset;
-data2$PS <- predict(PS.fit, newdata = data2, type="response") 
 
 # we can select variables caliper to ensure large/representable matched pairs are selected;
 # caliper can take values between 0.05 (a tight match) to 0.2 (a loose match);
 
 match.obj <- matchit(ps.formula, data =data2,
-                     distance = data2$PS,
+                     distance = 'logit', #default glm/logistic PS estimation;
                      method = "nearest", #nearest neighbour;
                      replace=FALSE,
                      ratio = 1, #1:1 match;
@@ -123,7 +119,8 @@ library(WeightIt)
 IPTW <- weightit(ps.formula,
                  data = data2,
                  method = "glm", #using the default logistic regression;
-                 stabilize = TRUE)
+                 stabilize = TRUE,
+                 estimand = "ATE")
 
 IPTW
 summary(IPTW)
@@ -151,20 +148,21 @@ love.plot(IPTW,
 **Outcome modelling**
 
 ```{r echo=TRUE, warning=FALSE, message=FALSE}
-fit2 <- glm(Y ~ A, 
+fit2 <- glm_weightit(Y ~ A, 
             family = "binomial",
-            weights = IPTW$weights,
+            weightit = IPTW,
             data = data2)
 
-#trim weights;
-#Trimming at 99th percentile
-IPTW.trim <- trim(IPTW, at = .99)
 
-fit2.trim <- glm(Y ~ A, 
-            family = "binomial",
-            weights = IPTW.trim$weights,
-            data = data2)
-tab_model(fit2, fit2.trim)
+tab_model(fit2)
+
+#To get Relative Risk we can use marginaleffect package;
+library(marginaleffects)
+avg_comparisons(fit2,
+                variables = "A",
+                comparison = "lnratioavg", #converting OR to RR;
+                transform = "exp")
+
 ```
 
 

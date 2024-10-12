@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Kuan Liu">
-<meta name="dcterms.date" content="2023-07-18">
+<meta name="dcterms.date" content="2024-10-12">
 
 <title>Tutorial on Causal Inference Using Machine Learning Methods - 1. The implementation of standard causal inference aproaches in R</title>
 <style>
@@ -191,6 +191,12 @@ div.csl-indent {
  <span class="menu-text">2. Using machine learning techniques for causal analysis</span></a>
   </div>
 </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./HTE.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">3. Heterogeneous Treatment effect - A Causal Forest Example</span></a>
+  </div>
+</li>
     </ul>
     </div>
 </nav>
@@ -238,7 +244,7 @@ div.csl-indent {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">2023-07-18</p>
+      <p class="date">2024-10-12</p>
     </div>
   </div>
   
@@ -824,20 +830,16 @@ Medicare]</td>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>ps.formula <span class="ot">&lt;-</span> <span class="fu">as.formula</span>(<span class="fu">paste</span>(<span class="st">"A~"</span>, </span>
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>                <span class="fu">paste</span>(baselines, <span class="at">collapse =</span> <span class="st">"+"</span>)))</span>
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>PS.fit <span class="ot">&lt;-</span> <span class="fu">glm</span>(ps.formula,<span class="at">family=</span><span class="st">"binomial"</span>, <span class="at">data=</span>data2)</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co">#adding calculated PS values back to the dataset;</span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>data2<span class="sc">$</span>PS <span class="ot">&lt;-</span> <span class="fu">predict</span>(PS.fit, <span class="at">newdata =</span> data2, <span class="at">type=</span><span class="st">"response"</span>) </span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co"># we can select variables caliper to ensure large/representable matched pairs are selected;</span></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co"># caliper can take values between 0.05 (a tight match) to 0.2 (a loose match);</span></span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>match.obj <span class="ot">&lt;-</span> <span class="fu">matchit</span>(ps.formula, <span class="at">data =</span>data2,</span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>                     <span class="at">distance =</span> data2<span class="sc">$</span>PS,</span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>                     <span class="at">method =</span> <span class="st">"nearest"</span>, <span class="co">#nearest neighbour;</span></span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>                     <span class="at">replace=</span><span class="cn">FALSE</span>,</span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>                     <span class="at">ratio =</span> <span class="dv">1</span>, <span class="co">#1:1 match;</span></span>
-<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>                     <span class="at">caliper =</span> .<span class="dv">15</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co"># we can select variables caliper to ensure large/representable matched pairs are selected;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co"># caliper can take values between 0.05 (a tight match) to 0.2 (a loose match);</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>match.obj <span class="ot">&lt;-</span> <span class="fu">matchit</span>(ps.formula, <span class="at">data =</span>data2,</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>                     <span class="at">distance =</span> <span class="st">'logit'</span>, <span class="co">#default glm/logistic PS estimation;</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>                     <span class="at">method =</span> <span class="st">"nearest"</span>, <span class="co">#nearest neighbour;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>                     <span class="at">replace=</span><span class="cn">FALSE</span>,</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>                     <span class="at">ratio =</span> <span class="dv">1</span>, <span class="co">#1:1 match;</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>                     <span class="at">caliper =</span> .<span class="dv">15</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p><strong>Checking PS distributions and balance</strong></p>
 <div class="cell" data-layout-align="center">
@@ -927,9 +929,10 @@ Medicare]</td>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>IPTW <span class="ot">&lt;-</span> <span class="fu">weightit</span>(ps.formula,</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">data =</span> data2,</span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">method =</span> <span class="st">"glm"</span>, <span class="co">#using the default logistic regression;</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">stabilize =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>IPTW</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">stabilize =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>                 <span class="at">estimand =</span> <span class="st">"ATE"</span>)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>IPTW</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>A weightit object
  - method: "glm" (propensity score weighting with GLM)
@@ -941,7 +944,7 @@ Medicare]</td>
 </div>
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(IPTW)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>                 Summary of weights
+<pre><code>                  Summary of weights
 
 - Weight ranges:
 
@@ -1087,26 +1090,18 @@ Adjusted   2561.57 1137.96</code></pre>
 </div>
 <p><strong>Outcome modelling</strong></p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>fit2 <span class="ot">&lt;-</span> <span class="fu">glm</span>(Y <span class="sc">~</span> A, </span>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>fit2 <span class="ot">&lt;-</span> <span class="fu">glm_weightit</span>(Y <span class="sc">~</span> A, </span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>            <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">weights =</span> IPTW<span class="sc">$</span>weights,</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">weightit =</span> IPTW,</span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">data =</span> data2)</span>
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="co">#trim weights;</span></span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="co">#Trimming at 99th percentile</span></span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>IPTW.trim <span class="ot">&lt;-</span> <span class="fu">trim</span>(IPTW, <span class="at">at =</span> .<span class="dv">99</span>)</span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>fit2.trim <span class="ot">&lt;-</span> <span class="fu">glm</span>(Y <span class="sc">~</span> A, </span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>            <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
-<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>            <span class="at">weights =</span> IPTW.trim<span class="sc">$</span>weights,</span>
-<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>            <span class="at">data =</span> data2)</span>
-<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a><span class="fu">tab_model</span>(fit2, fit2.trim)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="fu">tab_model</span>(fit2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <table data-quarto-postprocess="true" class="table table-sm table-striped small">
 <tbody>
 <tr class="odd">
 <td data-quarto-table-cell-role="th" style="text-align: center; border-top: double; font-style: normal; font-weight: bold; padding: 0.2cm;">&nbsp;</td>
-<td colspan="3" data-quarto-table-cell-role="th" style="text-align: center; border-top: double; font-style: normal; font-weight: bold; padding: 0.2cm;">Y</td>
 <td colspan="3" data-quarto-table-cell-role="th" style="text-align: center; border-top: double; font-style: normal; font-weight: bold; padding: 0.2cm;">Y</td>
 </tr>
 <tr class="even">
@@ -1114,42 +1109,45 @@ Adjusted   2561.57 1137.96</code></pre>
 <td style="text-align: center; border-bottom: 1px solid; font-style: italic; font-weight: normal;">Odds Ratios</td>
 <td style="text-align: center; border-bottom: 1px solid; font-style: italic; font-weight: normal;">CI</td>
 <td style="text-align: center; border-bottom: 1px solid; font-style: italic; font-weight: normal;">p</td>
-<td style="text-align: center; border-bottom: 1px solid; font-style: italic; font-weight: normal;">Odds Ratios</td>
-<td style="text-align: center; border-bottom: 1px solid; font-style: italic; font-weight: normal;">CI</td>
-<td style="text-align: center;">p</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left; padding: 0.2cm; vertical-align: top;">(Intercept)</td>
 <td style="text-align: left; padding: 0.2cm; vertical-align: top;">0.45</td>
-<td style="text-align: left; padding: 0.2cm; vertical-align: top;">0.42&nbsp;–&nbsp;0.48</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">0.41&nbsp;–&nbsp;0.49</td>
 <td style="text-align: left; padding: 0.2cm; vertical-align: top;"><strong>&lt;0.001</strong></td>
-<td style="text-align: left; padding: 0.2cm; vertical-align: top;">0.45</td>
-<td style="text-align: left; padding: 0.2cm; vertical-align: top;">0.42&nbsp;–&nbsp;0.48</td>
-<td style="text-align: center;"><strong>&lt;0.001</strong></td>
 </tr>
 <tr class="even">
 <td style="text-align: left; padding: 0.2cm; vertical-align: top;">A</td>
 <td style="text-align: left; padding: 0.2cm; vertical-align: top;">1.30</td>
-<td style="text-align: left; padding: 0.2cm; vertical-align: top;">1.16&nbsp;–&nbsp;1.45</td>
+<td style="text-align: left; padding: 0.2cm; vertical-align: top;">1.14&nbsp;–&nbsp;1.48</td>
 <td style="text-align: left; padding: 0.2cm; vertical-align: top;"><strong>&lt;0.001</strong></td>
-<td style="text-align: left; padding: 0.2cm; vertical-align: top;">1.34</td>
-<td style="text-align: left; padding: 0.2cm; vertical-align: top;">1.19&nbsp;–&nbsp;1.50</td>
-<td style="text-align: center;"><strong>&lt;0.001</strong></td>
 </tr>
 <tr class="odd">
 <td style="text-align: left; padding: 0.2cm; vertical-align: top; padding-top: 0.1cm; padding-bottom: 0.1cm; border-top: 1px solid;">Observations</td>
 <td colspan="3" style="text-align: left; padding: 0.2cm; vertical-align: top; padding-top: 0.1cm; padding-bottom: 0.1cm; border-top: 1px solid;">5735</td>
-<td colspan="3" style="text-align: left; padding: 0.2cm; vertical-align: top; padding-top: 0.1cm; padding-bottom: 0.1cm; border-top: 1px solid;">5735</td>
 </tr>
 <tr class="even">
 <td style="text-align: left; padding: 0.2cm; vertical-align: top; padding-top: 0.1cm; padding-bottom: 0.1cm;">R<sup>2</sup> Tjur</td>
-<td colspan="3" style="text-align: left; padding: 0.2cm; vertical-align: top; padding-top: 0.1cm; padding-bottom: 0.1cm;">0.005</td>
 <td colspan="3" style="text-align: left; padding: 0.2cm; vertical-align: top; padding-top: 0.1cm; padding-bottom: 0.1cm;">0.005</td>
 </tr>
 </tbody>
 </table>
 
 
+</div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">#To get Relative Risk we can use marginaleffect package;</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(marginaleffects)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="fu">avg_comparisons</span>(fit2,</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">variables =</span> <span class="st">"A"</span>,</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>                <span class="at">comparison =</span> <span class="st">"lnratioavg"</span>, <span class="co">#converting OR to RR;</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>                <span class="at">transform =</span> <span class="st">"exp"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+ Term              Contrast Estimate Pr(&gt;|z|)    S 2.5 % 97.5 %
+    A ln(mean(1) / mean(0))     1.19   &lt;0.001 13.9  1.09   1.29
+
+Columns: term, contrast, estimate, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted 
+Type:  response </code></pre>
 </div>
 </div>
 </section>
@@ -1185,10 +1183,10 @@ Adjusted   2561.57 1137.96</code></pre>
 <li>The Subgroup Balancing Propensity Score approach from <span class="citation" data-cites="dong2020subgroup">(<a href="#ref-dong2020subgroup" role="doc-biblioref">Dong et al. 2020</a>)</span> has been incorporated in the WeightIt package.</li>
 </ul>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># example subgroup analysis by sex;</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>(fit2<span class="ot">&lt;-</span> <span class="fu">weightit</span>(treat <span class="sc">~</span> age <span class="sc">+</span> educ <span class="sc">+</span> married <span class="sc">+</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>                nodegree <span class="sc">+</span> race <span class="sc">+</span> re74, <span class="at">data =</span> lalonde,</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">method =</span> <span class="st">"glm"</span>, <span class="at">estimand =</span> <span class="st">"ATT"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># example subgroup analysis by sex;</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>(fit2<span class="ot">&lt;-</span> <span class="fu">weightit</span>(treat <span class="sc">~</span> age <span class="sc">+</span> educ <span class="sc">+</span> married <span class="sc">+</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>                nodegree <span class="sc">+</span> race <span class="sc">+</span> re74, <span class="at">data =</span> lalonde,</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">method =</span> <span class="st">"glm"</span>, <span class="at">estimand =</span> <span class="st">"ATT"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>A weightit object
  - method: "glm" (propensity score weighting with GLM)
@@ -1198,44 +1196,21 @@ Adjusted   2561.57 1137.96</code></pre>
  - estimand: ATT (focal: 1)
  - covariates: age, educ, married, nodegree, race, re74</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>IPTW_sex <span class="ot">&lt;-</span> <span class="fu">weightit</span>(ps.formula,</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">data =</span> data2,</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">method =</span> <span class="st">"glm"</span>, <span class="co">#using the default logistic regression;</span></span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">by =</span> <span class="st">"sex"</span>,</span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">stabilize =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>subgroup_sex <span class="ot">&lt;-</span> <span class="fu">sbps</span>(IPTW, IPTW_sex)</span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(subgroup_sex)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>IPTW_sex <span class="ot">&lt;-</span> <span class="fu">weightit</span>(ps.formula,</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">data =</span> data2,</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">method =</span> <span class="st">"glm"</span>, <span class="co">#using the default logistic regression;</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">by =</span> <span class="st">"sex"</span>,</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">stabilize =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>subgroup_sex <span class="ot">&lt;-</span> <span class="fu">sbps</span>(IPTW, IPTW_sex)</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(subgroup_sex)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Summary of weights:
 
  - Overall vs. subgroup proportion contribution:
-         sex = Male sex = Female
-Overall           0            0
-Subgroup          1            1
-
- - - - - - - - Subgroup sex = Male - - - - - - -
-- Weight ranges:
-           Min                                   Max
-treated 0.4004 |---------------------------| 26.2701
-control 0.5996  |-------|                     8.8109
-
-- Units with 5 greatest weights by group:
-                                            
-           2719   2716   2474   1957    1064
- treated 6.4907 7.3707 8.2499 9.2112 26.2701
-           2224   1672   1209    821     283
- control 6.3468 6.6169 7.8151  8.621  8.8109
-
-          Ratio Coef of Var
-treated 65.6135      1.1156
-control 14.6941      0.6237
-overall 65.6135      0.8532
-
-- Effective Sample Sizes:
-            Control  Treated
-Unweighted 1914.000 1278.000
-Weighted   1378.187  569.595
+         sex = Female sex = Male
+Overall             0          0
+Subgroup            1          1
 
  - - - - - - - Subgroup sex = Female - - - - - - -
 - Weight ranges:
@@ -1258,16 +1233,39 @@ overall 33.5645      0.7508
 - Effective Sample Sizes:
            Control Treated
 Unweighted 1637.00  906.00
-Weighted   1177.92  475.07</code></pre>
+Weighted   1177.92  475.07
+
+ - - - - - - - Subgroup sex = Male - - - - - - -
+- Weight ranges:
+           Min                                   Max
+treated 0.4004 |---------------------------| 26.2701
+control 0.5996  |-------|                     8.8109
+
+- Units with 5 greatest weights by group:
+                                            
+           2719   2716   2474   1957    1064
+ treated 6.4907 7.3707 8.2499 9.2112 26.2701
+           2224   1672   1209    821     283
+ control 6.3468 6.6169 7.8151  8.621  8.8109
+
+          Ratio Coef of Var
+treated 65.6135      1.1156
+control 14.6941      0.6237
+overall 65.6135      0.8532
+
+- Effective Sample Sizes:
+            Control  Treated
+Unweighted 1914.000 1278.000
+Weighted   1378.187  569.595</code></pre>
 </div>
 </div>
 <p><strong>Checking PS distribution by subgroups</strong></p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bal.plot</span>(IPTW_sex, </span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>         <span class="at">cluster =</span> <span class="st">"sex"</span>,</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">which=</span><span class="st">"both"</span>,</span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">type =</span> <span class="st">"density"</span>,</span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">colors =</span> <span class="fu">c</span>(<span class="st">"red"</span>,<span class="st">"blue"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">bal.plot</span>(IPTW_sex, </span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>         <span class="at">cluster =</span> <span class="st">"sex"</span>,</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">which=</span><span class="st">"both"</span>,</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">type =</span> <span class="st">"density"</span>,</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">colors =</span> <span class="fu">c</span>(<span class="st">"red"</span>,<span class="st">"blue"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -1278,14 +1276,14 @@ Weighted   1177.92  475.07</code></pre>
 </div>
 <p><strong>checking balance by subgroups</strong></p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># checking balance by subgroups;</span></span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="co"># bal.tab(IPTW_sex, cluster = "sex")</span></span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="fu">love.plot</span>(IPTW_sex, </span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">cluster =</span> <span class="st">"sex"</span>, </span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">grid =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>          <span class="at">stars =</span> <span class="st">"std"</span>,</span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>          <span class="at">thresholds =</span> <span class="fu">c</span>(<span class="at">m =</span> .<span class="dv">1</span>),</span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>          <span class="at">colors =</span> <span class="fu">c</span>(<span class="st">"red"</span>,<span class="st">"blue"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># checking balance by subgroups;</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="co"># bal.tab(IPTW_sex, cluster = "sex")</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="fu">love.plot</span>(IPTW_sex, </span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">cluster =</span> <span class="st">"sex"</span>, </span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">grid =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>          <span class="at">stars =</span> <span class="st">"std"</span>,</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>          <span class="at">thresholds =</span> <span class="fu">c</span>(<span class="at">m =</span> .<span class="dv">1</span>),</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>          <span class="at">colors =</span> <span class="fu">c</span>(<span class="st">"red"</span>,<span class="st">"blue"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -1296,15 +1294,15 @@ Weighted   1177.92  475.07</code></pre>
 </div>
 <p><strong>fitting subgroup specific causal outcome models</strong></p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>fit2.f <span class="ot">&lt;-</span> <span class="fu">glm</span>(Y <span class="sc">~</span> A, </span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>            <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">weights =</span> IPTW_sex<span class="sc">$</span>weights[IPTW_sex<span class="sc">$</span>by<span class="sc">==</span><span class="st">"Female"</span>],</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">data =</span> <span class="fu">subset</span>(data2,sex<span class="sc">==</span><span class="st">"Female"</span>))</span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>fit2.m <span class="ot">&lt;-</span> <span class="fu">glm</span>(Y <span class="sc">~</span> A, </span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">weights =</span> IPTW_sex<span class="sc">$</span>weights[IPTW_sex<span class="sc">$</span>by<span class="sc">==</span><span class="st">"Male"</span>],</span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>            <span class="at">data =</span> <span class="fu">subset</span>(data2,sex<span class="sc">==</span><span class="st">"Male"</span>))</span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="fu">tab_model</span>(fit2.f, fit2.m)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>fit2.f <span class="ot">&lt;-</span> <span class="fu">glm</span>(Y <span class="sc">~</span> A, </span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>            <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">weights =</span> IPTW_sex<span class="sc">$</span>weights[IPTW_sex<span class="sc">$</span>by<span class="sc">==</span><span class="st">"Female"</span>],</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>            <span class="at">data =</span> <span class="fu">subset</span>(data2,sex<span class="sc">==</span><span class="st">"Female"</span>))</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>fit2.m <span class="ot">&lt;-</span> <span class="fu">glm</span>(Y <span class="sc">~</span> A, </span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">family =</span> <span class="st">"binomial"</span>,</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">weights =</span> IPTW_sex<span class="sc">$</span>weights[IPTW_sex<span class="sc">$</span>by<span class="sc">==</span><span class="st">"Male"</span>],</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>            <span class="at">data =</span> <span class="fu">subset</span>(data2,sex<span class="sc">==</span><span class="st">"Male"</span>))</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a><span class="fu">tab_model</span>(fit2.f, fit2.m)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <table data-quarto-postprocess="true" class="table table-sm table-striped small">
 <tbody>

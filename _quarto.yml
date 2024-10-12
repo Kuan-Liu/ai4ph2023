@@ -6,6 +6,7 @@ project:
       - index.qmd
       - section1.qmd
       - section2.qmd
+      - HTE.qmd
 
 website:
   title: "Tutorial on Causal Inference Using Machine Learning Methods"
@@ -30,6 +31,7 @@ website:
         - index.qmd
         - section1.qmd
         - section2.qmd
+        - HTE.qmd
   page-navigation: true
 
 format:
