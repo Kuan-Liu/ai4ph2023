@@ -1,0 +1,290 @@
+---
+title: "1. The implementation of standard causal inference aproaches in R"
+bibliography: book.bib
+author: "Kuan Liu"
+format: 
+  html: 
+    code-block-bg: true
+---
+
+
+<!-- {{< include index.qmd >}} -->
+
+::: {.callout-tip}
+## Outlines
+-  Descriptive analysis
+-  Propensity score matching
+-  Propensity score weighting
+-  General guideline on PSA analysis
+:::
+
+## 0. Summary statistics of baseline variables by treatment status
+
+
+```{r echo=TRUE, warning=FALSE, message=FALSE}
+require(tidyverse)
+library(tableone)
+data2<-readRDS("data/data2")
+covariates <- select(data2, -c(id, A, Y))
+baselines <- colnames(covariates)
+baselines
+
+tab0 <- CreateTableOne(vars = baselines,
+                       data = data2, 
+                       strata = "A", 
+                       test = FALSE, #mute P-value calculation;
+                       smd = TRUE,
+                       addOverall = TRUE)
+print(tab0, smd = TRUE, showAllLevels = FALSE)
+```
+
+
+## 0.1 Naive regression analysis
+
+
+```{r echo=TRUE, warning=FALSE, message=FALSE}
+library(sjPlot)
+# adjust the treatment variable & baseline variables;
+fit0.Y.formula <- as.formula(paste("Y ~ A +", 
+                               paste(baselines, 
+                                     collapse = "+")))
+fit0 <- glm(fit0.Y.formula, family = "binomial", data = data2)
+tab_model(fit0)
+```
+
+
+##  1 Propensity score analysis
+
+-  This is a review from the morning session. See Brice's lecture notes for details. 
+
+### 1.1 Propensity score matching
+
+
+
+```{r echo=TRUE, warning=FALSE, message=FALSE}
+library(MatchIt)
+
+set.seed(123) #this approach requires setting seed values to reproduce the same results;
+
+ps.formula <- as.formula(paste("A~", 
+                paste(baselines, collapse = "+")))
+
+
+# we can select variables caliper to ensure large/representable matched pairs are selected;
+# caliper can take values between 0.05 (a tight match) to 0.2 (a loose match);
+
+match.obj <- matchit(ps.formula, data =data2,
+                     distance = 'logit', #default glm/logistic PS estimation;
+                     method = "nearest", #nearest neighbour;
+                     replace=FALSE,
+                     ratio = 1, #1:1 match;
+                     caliper = .15)
+```
+
+
+
+**Checking PS distributions and balance**
+
+
+```{r echo=TRUE, warning=FALSE, message=FALSE, fig.align='center'}
+library(cobalt)
+bal.plot(match.obj,
+         var.name="distance",
+         which="both",
+         type = "density",
+         colors = c("red","blue"))
+```
+
+```{r echo=TRUE, warning=FALSE, message=FALSE, fig.align='center', fig.height=9}
+love.plot(match.obj, 
+          binary = "std", 
+          grid = TRUE,
+          thresholds = c(m = .1),
+          colors = c("red","blue"))  
+```
+
+
+**Outcome regression post-matching**
+
+
+```{r echo=TRUE, warning=FALSE, message=FALSE, fig.align='center', fig.height=9}
+library(geepack)
+Match <- match.data(match.obj)
+fit1 <- geeglm(Y ~ A, family=binomial("log"), 
+              data=Match,
+              weights=weights, 
+              std.err = 'san.se', 
+              id=subclass, 
+              corstr="independence") 
+sjPlot::tab_model(fit1)
+```
+
+
+
+### 1.2 Propensity score weighting
+
+**Obtaining weights using WeightIt package**
+
+
+```{r echo=TRUE, warning=FALSE, message=FALSE}
+library(WeightIt)
+IPTW <- weightit(ps.formula,
+                 data = data2,
+                 method = "glm", #using the default logistic regression;
+                 stabilize = TRUE,
+                 estimand = "ATE")
+
+IPTW
+summary(IPTW)
+```
+
+
+**Checking PS distributions and balance**
+
+
+```{r echo=TRUE, warning=FALSE, message=FALSE, fig.align='center'}
+bal.plot(IPTW,
+         which="both",
+         type = "density",
+         colors = c("red","blue"))
+
+bal.tab(IPTW, un=TRUE, thresholds = c(m=0.1))
+```
+
+```{r echo=TRUE, warning=FALSE, message=FALSE, fig.align='center', fig.height=9}
+love.plot(IPTW, 
+          binary = "std", 
+          grid = TRUE,
+          thresholds = c(m = .1),
+          colors = c("red","blue"))  
+```
+
+
+**Outcome modelling**
+
+
+```{r echo=TRUE, warning=FALSE, message=FALSE}
+fit2 <- glm_weightit(Y ~ A, 
+            family = "binomial",
+            weightit = IPTW,
+            data = data2)
+
+
+tab_model(fit2)
+
+#To get Relative Risk we can use marginaleffect package;
+library(marginaleffects)
+avg_comparisons(fit2,
+                variables = "A",
+                comparison = "lnratioavg", #converting OR to RR;
+                transform = "exp")
+
+```
+
+
+
+## 1.3 General guildelines on implementing PSA
+
+Here providing a list a references that covers guildelines are PSA analysis and its reporting
+
+1.  PS matching [@austin2007propensity]
+2.  PSA analysis for cancer research [@yao2017reporting]
+3.  PSA analysis for neurology [@austin2021applying]
+4.  PSA analysis for multiple sclerosis [@karim2022use]
+    
+### Checklist for the design and analysis of studies using PS methods 
+[@austin2021applying]
+    
+
+```{r echo = FALSE, out.width="100%"}
+knitr::include_graphics("image/F1.large.jpg")
+```
+
+ 
+    
+    
+### Checklist for reporting of studies using PS methods 
+[@austin2021applying]
+    
+
+```{r echo = FALSE, out.width="100%"}
+knitr::include_graphics("image/F2.large.jpg")
+```
+
+ 
+**Subgroup analysis**
+-  There are several good resources on how to estimate subgroup treatment effects:[@eeren2015estimating], [@wang2018relative], [@dong2020subgroup],[@yang2021propensity]
+
+-  The Subgroup Balancing Propensity Score approach from [@dong2020subgroup] has been incorporated in the WeightIt package.
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# example subgroup analysis by sex;
+(fit2<- weightit(treat ~ age + educ + married +
+                nodegree + race + re74, data = lalonde,
+                method = "glm", estimand = "ATT"))
+
+IPTW_sex <- weightit(ps.formula,
+                 data = data2,
+                 method = "glm", #using the default logistic regression;
+                 by = "sex",
+                 stabilize = TRUE)
+
+subgroup_sex <- sbps(IPTW, IPTW_sex)
+summary(subgroup_sex)
+```
+
+
+**Checking PS distribution by subgroups**
+
+```{r echo=TRUE, message=FALSE, warning=FALSE,fig.align='center'}
+bal.plot(IPTW_sex, 
+         cluster = "sex",
+         which="both",
+         type = "density",
+         colors = c("red","blue"))
+```
+
+
+**checking balance by subgroups**
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE, fig.align='center',fig.height=9}       
+# checking balance by subgroups;
+# bal.tab(IPTW_sex, cluster = "sex")
+love.plot(IPTW_sex, 
+          cluster = "sex", 
+          grid = TRUE,
+          stars = "std",
+          thresholds = c(m = .1),
+          colors = c("red","blue"))
+```
+
+
+
+**fitting subgroup specific causal outcome models**
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+fit2.f <- glm(Y ~ A, 
+            family = "binomial",
+            weights = IPTW_sex$weights[IPTW_sex$by=="Female"],
+            data = subset(data2,sex=="Female"))
+fit2.m <- glm(Y ~ A, 
+            family = "binomial",
+            weights = IPTW_sex$weights[IPTW_sex$by=="Male"],
+            data = subset(data2,sex=="Male"))
+tab_model(fit2.f, fit2.m)
+```
+
+
+       
+**Sensitivity analysis for unmeasured confounding**
+
+-  E-value, see online calculator [https://www.evalue-calculator.com/](https://www.evalue-calculator.com/)
+-  You can calculate e-value in R as well using package Evalue, see [https://louisahsmith.github.io/evalue/index.html](https://louisahsmith.github.io/evalue/index.html)
+
+
+    
+    
+    
+
