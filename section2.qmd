@@ -164,9 +164,9 @@ p <-
   geom_linerange(aes(xmin=conf.low, xmax=conf.high)) +
   geom_vline(xintercept = 1, linetype="dashed") +
   labs(x="Odds Ratio", y="") +
-  coord_cartesian(ylim=c(1,8), xlim=c(0.7, 2)) +
-  annotate("text", x = 0.8, y = 8, label = "RHC protective") +
-  annotate("text", x = 1.2, y = 8, label = "RHC harmful") + 
+  coord_cartesian(ylim=c(1,7), xlim=c(0.7, 2)) +
+  annotate("text", x = 0.8, y = 7, label = "RHC protective") +
+  annotate("text", x = 1.2, y = 7, label = "RHC harmful") + 
   theme(axis.line.y = element_blank(),
         axis.ticks.y= element_blank(),
         axis.text.y= element_blank(),
@@ -190,7 +190,7 @@ p_left <-
   ggplot(aes(y = method)) +
   geom_text(aes(x = 0, label = method), hjust = 0, fontface = "bold")+
   geom_text(
-    aes(x = 2, label = estimate_label),
+    aes(x = 1, label = estimate_label),
     hjust = 0,
     fontface = ifelse(plotdata_OR$estimate_label == "Odds Ratio (95% CI)", "bold", "plain")
   )+
@@ -199,8 +199,8 @@ p_left <-
 
 library(patchwork)
 layout <- c(
-  area(t = 0, l = 0, b = 15, r = 4), # left plot, starts at the top of the page (0) and goes 15 units down and 4 units to the right;
-  area(t = 1, l = 5, b = 15, r = 9) # middle plot starts a little lower (t=1) because there's no title. starts 1 unit right of the left plot (l=5, whereas left plot is r=4);
+  area(t = 0, l = 0, b = 14, r = 4), # left plot, starts at the top of the page (0) and goes 14 units down and 4 units to the right;
+  area(t = 1, l = 5, b = 14, r = 9) # middle plot starts a little lower (t=1) because there's no title. starts 1 unit right of the left plot (l=5, whereas left plot is r=4);
 )
 # final plot arrangement
 p_left + p +plot_layout(design = layout)
